@@ -424,9 +424,9 @@ public final class Settings {
          */
         public static final String ANALYZER_CENTRAL_QUERY = "analyzer.central.query";
         /**
-         * The path to mono, if available.
+         * The path to dotnet core, if available.
          */
-        public static final String ANALYZER_ASSEMBLY_MONO_PATH = "analyzer.assembly.mono.path";
+        public static final String ANALYZER_ASSEMBLY_DOTNET_PATH = "analyzer.assembly.dotnet.path";
         /**
          * The path to bundle-audit, if available.
          */

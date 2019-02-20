@@ -125,8 +125,8 @@ public final class CliParser {
         if (isRunScan()) {
             validatePathExists(getScanFiles(), ARGUMENT.SCAN);
             validatePathExists(getReportDirectory(), ARGUMENT.OUT);
-            if (getPathToMono() != null) {
-                validatePathExists(getPathToMono(), ARGUMENT.PATH_TO_MONO);
+            if (getPathToCore() != null) {
+                validatePathExists(getPathToCore(), ARGUMENT.PATH_TO_CORE);
             }
             if (line.hasOption(ARGUMENT.OUTPUT_FORMAT)) {
                 final String format = line.getOptionValue(ARGUMENT.OUTPUT_FORMAT);
@@ -369,8 +369,8 @@ public final class CliParser {
                 .longOpt(ARGUMENT.ADDITIONAL_ZIP_EXTENSIONS)
                 .desc("A comma separated list of additional extensions to be scanned as ZIP files "
                         + "(ZIP, EAR, WAR are already treated as zip files)").build();
-        final Option pathToMono = Option.builder().argName("path").hasArg().longOpt(ARGUMENT.PATH_TO_MONO)
-                .desc("The path to Mono for .NET Assembly analysis on non-windows systems.").build();
+        final Option pathToCore = Option.builder().argName("path").hasArg().longOpt(ARGUMENT.PATH_TO_CORE)
+                .desc("The path to dotnet core.").build();
         final Option pathToBundleAudit = Option.builder().argName("path").hasArg()
                 .longOpt(ARGUMENT.PATH_TO_BUNDLE_AUDIT)
                 .desc("The path to bundle-audit for Gem bundle analysis.").build();
@@ -501,7 +501,7 @@ public final class CliParser {
                 .addOption(nexusPassword)
                 .addOption(nexusUsesProxy)
                 .addOption(additionalZipExtensions)
-                .addOption(pathToMono)
+                .addOption(pathToCore)
                 .addOption(pathToBundleAudit)
                 .addOption(purge);
     }
@@ -968,19 +968,18 @@ public final class CliParser {
     }
 
     /**
-     * Returns the path to Mono for .NET Assembly analysis on non-windows
-     * systems.
+     * Returns the path to dotnet core.
      *
-     * @return the path to Mono
+     * @return the path to dotnet core
      */
-    public String getPathToMono() {
-        return line.getOptionValue(ARGUMENT.PATH_TO_MONO);
+    public String getPathToCore() {
+        return line.getOptionValue(ARGUMENT.PATH_TO_CORE);
     }
 
     /**
      * Returns the path to bundle-audit for Ruby bundle analysis.
      *
-     * @return the path to Mono
+     * @return the path to bundle-audit
      */
     public String getPathToBundleAudit() {
         return line.getOptionValue(ARGUMENT.PATH_TO_BUNDLE_AUDIT);
@@ -1556,10 +1555,9 @@ public final class CliParser {
          */
         public static final String DB_DRIVER_PATH = "dbDriverPath";
         /**
-         * The CLI argument name for setting the path to mono for .NET Assembly
-         * analysis on non-windows systems.
+         * The CLI argument name for setting the path to dotnet core.
          */
-        public static final String PATH_TO_MONO = "mono";
+        public static final String PATH_TO_CORE = "dotnet";
         /**
          * The CLI argument name for setting extra extensions.
          */
