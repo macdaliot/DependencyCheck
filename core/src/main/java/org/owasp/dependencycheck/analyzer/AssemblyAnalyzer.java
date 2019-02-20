@@ -50,6 +50,7 @@ import org.owasp.dependencycheck.dependency.EvidenceType;
 import org.owasp.dependencycheck.dependency.naming.GenericIdentifier;
 import org.owasp.dependencycheck.utils.ExtractionException;
 import org.owasp.dependencycheck.utils.ExtractionUtil;
+import org.owasp.dependencycheck.utils.DependencyVersionUtil;
 import org.owasp.dependencycheck.utils.XmlUtils;
 import org.owasp.dependencycheck.xml.assembly.AssemblyData;
 import org.owasp.dependencycheck.xml.assembly.GrokParser;
