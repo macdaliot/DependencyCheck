@@ -45,9 +45,12 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.xml.parsers.ParserConfigurationException;
+import org.apache.commons.lang3.StringUtils;
 import org.owasp.dependencycheck.exception.InitializationException;
 import org.apache.commons.lang3.SystemUtils;
 import org.owasp.dependencycheck.dependency.EvidenceType;
+import org.owasp.dependencycheck.dependency.naming.GenericIdentifier;
+import org.owasp.dependencycheck.utils.DependencyVersionUtil;
 import org.owasp.dependencycheck.utils.XmlUtils;
 
 /**
@@ -60,6 +63,10 @@ import org.owasp.dependencycheck.utils.XmlUtils;
 @ThreadSafe
 public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
 
+    /**
+     * Logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(AssemblyAnalyzer.class);
     /**
      * The analyzer name
      */
@@ -78,17 +85,17 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
     private static final FileFilter FILTER = FileFilterBuilder.newInstance().addExtensions(
             SUPPORTED_EXTENSIONS).build();
     /**
-     * The temp value for `GrokAssembly.exe`.
+     * The temp value for `GrokAssembly.dll`.
      */
-    private File grokAssemblyExe = null;
+    private File grokAssembly = null;
     /**
      * The temp value for `GrokAssembly.exe.config`.
      */
     private File grokAssemblyConfig = null;
     /**
-     * Logger
+     * The base argument list to call GrokAssembly.
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(AssemblyAnalyzer.class);
+    private List<String> baseArgumentList = null;
 
     /**
      * Builds the beginnings of a List for ProcessBuilder
@@ -98,16 +105,14 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
     protected List<String> buildArgumentList() {
         // Use file.separator as a wild guess as to whether this is Windows
         final List<String> args = new ArrayList<>();
-        if (!SystemUtils.IS_OS_WINDOWS) {
-            if (getSettings().getString(Settings.KEYS.ANALYZER_ASSEMBLY_MONO_PATH) != null) {
-                args.add(getSettings().getString(Settings.KEYS.ANALYZER_ASSEMBLY_MONO_PATH));
-            } else if (isInPath("mono")) {
-                args.add("mono");
-            } else {
-                return null;
-            }
+        if (getSettings().getString(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH) != null) {
+            args.add(getSettings().getString(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH));
+        } else if (isDotnetPath()) {
+            args.add("dotnet");
+        } else {
+            return null;
         }
-        args.add(grokAssemblyExe.getPath());
+        args.add(grokAssembly.getPath());
         return args;
     }
 
@@ -125,15 +130,15 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
             throw new AnalysisException(String.format("%s does not exist and cannot be analyzed by dependency-check",
                     dependency.getActualFilePath()));
         }
-        if (grokAssemblyExe == null) {
+        if (grokAssembly == null) {
             LOGGER.warn("GrokAssembly didn't get deployed");
             return;
         }
-        final List<String> args = buildArgumentList();
-        if (args == null) {
+        if (baseArgumentList == null) {
             LOGGER.warn("Assembly Analyzer was unable to execute");
             return;
         }
+        final List<String> args = new ArrayList<>(baseArgumentList);
         args.add(dependency.getActualFilePath());
         final ProcessBuilder pb = new ProcessBuilder(args);
         final Document doc;
@@ -174,36 +179,92 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                 throw new AnalysisException(error);
             }
 
-            final String version = xpath.evaluate("/assembly/version", doc);
-            if (version != null) {
-                dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "version", version, Confidence.HIGHEST);
+            /*
+                   <CompanyName>OWASP Contributors</CompanyName>
+                   <ProductName>GrokAssembly</ProductName>
+                   <ProductVersion>3.0.0.0</ProductVersion>
+                <Comments>Inspects a .NET Assembly to determine Company, Product, and Version information</Comments>
+                   <FileDescription>GrokAssembly</FileDescription>
+                   <FileName>/Users/jeremy/Projects/GrokAssembly/GrokAssembly/bin/Release/netcoreapp2.0/GrokAssembly.dll</FileName>
+                   <FileVersion>3.0.0.0</FileVersion>
+                   <InternalName>GrokAssembly.exe</InternalName>
+                   <OriginalFilename>GrokAssembly.exe</OriginalFilename>
+                <fullname>GrokAssembly, Version=3.0.0.0, Culture=neutral, PublicKeyToken=null</fullname>
+                <namespaces>
+                    <namespace>GrokAssembly</namespace>
+                </namespaces>
+             */
+            final String productVersion = xpath.evaluate("/assembly/ProductVersion", doc);
+            if (productVersion != null && !productVersion.isEmpty()) {
+                dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "ProductVersion", productVersion, Confidence.HIGHEST);
+            }
+            final String fileVersion = xpath.evaluate("/assembly/FileVersion", doc);
+            if (fileVersion != null && !fileVersion.isEmpty()) {
+                dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "FileVersion", fileVersion, Confidence.HIGHEST);
+            }
+            if (fileVersion != null && !fileVersion.isEmpty() && fileVersion.equals(productVersion)) {
+                dependency.setVersion(fileVersion);
             }
 
-            final String vendor = xpath.evaluate("/assembly/company", doc);
-            if (vendor != null) {
-                dependency.addEvidence(EvidenceType.VENDOR, "grokassembly", "vendor", vendor, Confidence.HIGH);
+            final String vendor = xpath.evaluate("/assembly/CompanyName", doc);
+            if (vendor != null && !vendor.isEmpty()) {
+                dependency.addEvidence(EvidenceType.VENDOR, "grokassembly", "CompanyName", vendor, Confidence.HIGHEST);
             }
 
-            final String product = xpath.evaluate("/assembly/product", doc);
-            if (product != null) {
-                dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "product", product, Confidence.HIGH);
+            final String product = xpath.evaluate("/assembly/ProductName", doc);
+            if (product != null && !product.isEmpty()) {
+                dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "ProductName", product, Confidence.HIGHEST);
             }
 
+            final String fileDescription = xpath.evaluate("/assembly/FileDescription", doc);
+            if (fileDescription != null && !fileDescription.isEmpty()) {
+                dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "FileDescription", fileDescription, Confidence.HIGH);
+            }
+
+            final String internalName = xpath.evaluate("/assembly/InternalName", doc);
+            if (internalName != null && !internalName.isEmpty()) {
+                dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "InternalName", internalName, Confidence.MEDIUM);
+                if (dependency.getName() == null && StringUtils.containsIgnoreCase(dependency.getActualFile().getName(), internalName)) {
+                    final String ext = FileUtils.getFileExtension(internalName);
+                    if (ext != null) {
+                        dependency.setName(internalName.substring(0, internalName.length() - ext.length() - 1));
+                    } else {
+                        dependency.setName(internalName);
+                    }
+                }
+            }
+
+            final String originalFilename = xpath.evaluate("/assembly/OriginalFilename", doc);
+            if (originalFilename != null && !originalFilename.isEmpty()) {
+                dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "OriginalFilename", originalFilename, Confidence.MEDIUM);
+                if (dependency.getName() == null && StringUtils.containsIgnoreCase(dependency.getActualFile().getName(), originalFilename)) {
+                    final String ext = FileUtils.getFileExtension(originalFilename);
+                    if (ext != null) {
+                        dependency.setName(originalFilename.substring(0, originalFilename.length() - ext.length() - 1));
+                    } else {
+                        dependency.setName(originalFilename);
+                    }
+                }
+            }
+            if (dependency.getName() != null && dependency.getVersion() != null) {
+                dependency.addSoftwareIdentifier(new GenericIdentifier(
+                        String.format("%s@%s", dependency.getName(), dependency.getVersion()),
+                        Confidence.MEDIUM));
+            }
         } catch (ParserConfigurationException pce) {
             throw new AnalysisException("Error initializing the assembly analyzer", pce);
         } catch (IOException | XPathExpressionException ioe) {
             throw new AnalysisException(ioe);
         } catch (SAXException saxe) {
             LOGGER.error("----------------------------------------------------");
-            LOGGER.error("Failed to read the Assembly Analyzer results. "
-                    + "On some systems mono-runtime and mono-devel need to be installed.");
+            LOGGER.error("Failed to read the Assembly Analyzer results.");
             LOGGER.error("----------------------------------------------------");
             throw new AnalysisException("Couldn't parse Assembly Analyzer results (GrokAssembly)", saxe);
         }
     }
 
     /**
-     * Initialize the analyzer. In this case, extract GrokAssembly.exe to a
+     * Initialize the analyzer. In this case, extract GrokAssembly.dll to a
      * temporary location.
      *
      * @param engine a reference to the dependency-check engine
@@ -214,30 +275,31 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
         final File tempFile;
         final File cfgFile;
         try {
-            tempFile = File.createTempFile("GKA", ".exe", getSettings().getTempDirectory());
-            cfgFile = new File(tempFile.getPath() + ".config");
+            tempFile = File.createTempFile("GKA", ".dll", getSettings().getTempDirectory());
+            final String tmpPath = tempFile.getPath();
+            cfgFile = new File(tmpPath.substring(0, tmpPath.length() - 4) + ".runtimeconfig.json");
         } catch (IOException ex) {
             setEnabled(false);
             throw new InitializationException("Unable to create temporary file for the assembly analyzer", ex);
         }
         try (FileOutputStream fos = new FileOutputStream(tempFile);
-                InputStream is = FileUtils.getResourceAsStream("GrokAssembly.exe");
+                InputStream is = FileUtils.getResourceAsStream("GrokAssembly.dll");
                 FileOutputStream fosCfg = new FileOutputStream(cfgFile);
-                InputStream isCfg = FileUtils.getResourceAsStream("GrokAssembly.exe.config")) {
+                InputStream isCfg = FileUtils.getResourceAsStream("GrokAssembly.runtimeconfig.json")) {
             IOUtils.copy(is, fos);
-            grokAssemblyExe = tempFile;
-            LOGGER.debug("Extracted GrokAssembly.exe to {}", grokAssemblyExe.getPath());
+            grokAssembly = tempFile;
+            LOGGER.debug("Extracted GrokAssembly.dll to {}", grokAssembly.getPath());
             IOUtils.copy(isCfg, fosCfg);
             grokAssemblyConfig = cfgFile;
-            LOGGER.debug("Extracted GrokAssembly.exe.config to {}", cfgFile);
+            LOGGER.debug("Extracted GrokAssembly.runtimeconfig.json to {}", cfgFile);
         } catch (IOException ioe) {
             this.setEnabled(false);
-            LOGGER.warn("Could not extract GrokAssembly.exe: {}", ioe.getMessage());
-            throw new InitializationException("Could not extract GrokAssembly.exe", ioe);
+            LOGGER.warn("Could not extract GrokAssembly.dll: {}", ioe.getMessage());
+            throw new InitializationException("Could not extract GrokAssembly.dll", ioe);
         }
 
         // Now, need to see if GrokAssembly actually runs from this location.
-        final List<String> args = buildArgumentList();
+        baseArgumentList = buildArgumentList();
         //TODO this creates an "unreported" error - if someone doesn't look
         // at the command output this could easily be missed (especially in an
         // Ant or Maven build.
@@ -245,18 +307,17 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
         // We need to create a non-fatal warning error type that will
         // get added to the report.
         //TODO this idea needs to get replicated to the bundle audit analyzer.
-        if (args == null) {
+        if (baseArgumentList == null) {
             setEnabled(false);
             LOGGER.error("----------------------------------------------------");
             LOGGER.error(".NET Assembly Analyzer could not be initialized and at least one "
-                    + "'exe' or 'dll' was scanned. The 'mono' executable could not be found on "
-                    + "the path; either disable the Assembly Analyzer or configure the path mono. "
-                    + "On some systems mono-runtime and mono-devel need to be installed.");
+                    + "'exe' or 'dll' was scanned. The 'dotnet' executable could not be found on "
+                    + "the path; either disable the Assembly Analyzer or configure the path dotnet core.");
             LOGGER.error("----------------------------------------------------");
             return;
         }
         try {
-            final ProcessBuilder pb = new ProcessBuilder(args);
+            final ProcessBuilder pb = new ProcessBuilder(baseArgumentList);
             final Process p = pb.start();
             // Try evacuating the error stream
             IOUtils.copy(p.getErrorStream(), NullOutputStream.NULL_OUTPUT_STREAM);
@@ -267,8 +328,8 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
             final String error = xpath.evaluate("/assembly/error", doc);
             if (p.waitFor() != 1 || error == null || error.isEmpty()) {
                 LOGGER.warn("An error occurred with the .NET AssemblyAnalyzer, please see the log for more details.");
-                LOGGER.debug("GrokAssembly.exe is not working properly");
-                grokAssemblyExe = null;
+                LOGGER.debug("GrokAssembly.dll is not working properly");
+                grokAssembly = null;
                 setEnabled(false);
                 throw new InitializationException("Could not execute .NET AssemblyAnalyzer");
             }
@@ -292,13 +353,13 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
     @Override
     public void closeAnalyzer() throws Exception {
         try {
-            if (grokAssemblyExe != null && !grokAssemblyExe.delete()) {
-                LOGGER.debug("Unable to delete temporary GrokAssembly.exe; attempting delete on exit");
-                grokAssemblyExe.deleteOnExit();
+            if (grokAssembly != null && !grokAssembly.delete()) {
+                LOGGER.debug("Unable to delete temporary GrokAssembly.dll; attempting delete on exit");
+                grokAssembly.deleteOnExit();
             }
         } catch (SecurityException se) {
-            LOGGER.debug("Can't delete temporary GrokAssembly.exe");
-            grokAssemblyExe.deleteOnExit();
+            LOGGER.debug("Can't delete temporary GrokAssembly.dll");
+            grokAssembly.deleteOnExit();
         }
         try {
             if (grokAssemblyConfig != null && !grokAssemblyConfig.delete()) {
@@ -356,16 +417,25 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
      * @return <code>true</code> if the file exists; otherwise
      * <code>false</code>
      */
-    private boolean isInPath(String file) {
-        final ProcessBuilder pb = new ProcessBuilder("which", file);
+    private boolean isDotnetPath() {
+        String[] args = new String[2];
+        args[0] = "dotnet";
+        args[1] = "--version";
+        final ProcessBuilder pb = new ProcessBuilder(args);
         try {
             final Process proc = pb.start();
-            final int retCode = proc.waitFor();
+            int retCode = proc.waitFor();
             if (retCode == 0) {
                 return true;
             }
+            byte[] version = new byte[50];
+            proc.getInputStream().read(version);
+            String v = new String(version);
+            if (v.length() > 0) {
+                return true;
+            }
         } catch (IOException | InterruptedException ex) {
-            LOGGER.debug("Path search failed for " + file, ex);
+            LOGGER.debug("Path search failed for dotnet", ex);
         }
         return false;
     }

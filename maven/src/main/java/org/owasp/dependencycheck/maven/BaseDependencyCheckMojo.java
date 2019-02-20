@@ -599,11 +599,11 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
     private Integer cveValidForHours;
 
     /**
-     * The path to mono for .NET Assembly analysis on non-windows systems.
+     * The path to dotnet core.
      */
     @SuppressWarnings("CanBeFinal")
-    @Parameter(property = "pathToMono", defaultValue = "", required = false)
-    private String pathToMono;
+    @Parameter(property = "pathToCore", defaultValue = "", required = false)
+    private String pathToCore;
 
     /**
      * The RetireJS Analyzer configuration:
@@ -1543,7 +1543,7 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
         settings.setBooleanIfNotNull(Settings.KEYS.ANALYZER_ASSEMBLY_ENABLED, assemblyAnalyzerEnabled);
         settings.setBooleanIfNotNull(Settings.KEYS.ANALYZER_ARCHIVE_ENABLED, archiveAnalyzerEnabled);
         settings.setStringIfNotEmpty(Settings.KEYS.ADDITIONAL_ZIP_EXTENSIONS, zipExtensions);
-        settings.setStringIfNotEmpty(Settings.KEYS.ANALYZER_ASSEMBLY_MONO_PATH, pathToMono);
+        settings.setStringIfNotEmpty(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH, pathToCore);
 
         settings.setStringIfNotEmpty(Settings.KEYS.ANALYZER_NEXUS_URL, nexusUrl);
         if (nexusServerId != null) {
