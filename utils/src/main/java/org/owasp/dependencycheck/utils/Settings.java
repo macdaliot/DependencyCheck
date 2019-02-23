@@ -142,7 +142,7 @@ public final class Settings {
         public static final String CVE_CPE_STARTS_WITH_FILTER = "cve.cpe.startswith.filter";
         /**
          * The properties key for the URL to retrieve the recently modified and
-         * added CVE entries (last 8 days) using the 2.0 schema.
+         * added CVE entries (last 8 days) using the JSON data feeds.
          */
         public static final String CVE_MODIFIED_JSON = "cve.url.modified";
         /**
@@ -153,7 +153,7 @@ public final class Settings {
         public static final String CVE_ORIGINAL_JSON = "cve.url.original";
         /**
          * The properties key for the URL to retrieve the recently modified and
-         * added CVE entries (last 8 days) using the 2.0 schema.
+         * added CVE entries (last 8 days) using the JSON data feeds.
          */
         public static final String CVE_BASE_JSON = "cve.url.base";
         /**

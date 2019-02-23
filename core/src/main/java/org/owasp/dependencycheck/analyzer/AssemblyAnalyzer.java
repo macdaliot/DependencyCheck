@@ -43,6 +43,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang3.StringUtils;
@@ -105,7 +106,7 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
     protected List<String> buildArgumentList() {
         // Use file.separator as a wild guess as to whether this is Windows
         final List<String> args = new ArrayList<>();
-        if (getSettings().getString(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH) != null) {
+        if (!StringUtils.isEmpty(getSettings().getString(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH))) {
             args.add(getSettings().getString(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH));
         } else if (isDotnetPath()) {
             args.add("dotnet");
@@ -202,7 +203,7 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
             if (fileVersion != null && !fileVersion.isEmpty()) {
                 dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "FileVersion", fileVersion, Confidence.HIGHEST);
             }
-            if (fileVersion != null && !fileVersion.isEmpty() && fileVersion.equals(productVersion)) {
+            if (fileVersion != null && !fileVersion.isEmpty() && (fileVersion.equals(productVersion) || fileVersion.startsWith(productVersion))) {
                 dependency.setVersion(fileVersion);
             }
 
@@ -423,6 +424,11 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
         args[1] = "--version";
         final ProcessBuilder pb = new ProcessBuilder(args);
         try {
+            Map<String, String> envs = pb.environment();
+            LOGGER.error("Path: " + envs.get("Path"));
+            LOGGER.error("PATH: " + envs.get("PATH"));
+            LOGGER.error("SYSE: " + System.getProperty("PATH"));
+            System.getProperties().entrySet().forEach(System.out::println);
             final Process proc = pb.start();
             int retCode = proc.waitFor();
             if (retCode == 0) {
