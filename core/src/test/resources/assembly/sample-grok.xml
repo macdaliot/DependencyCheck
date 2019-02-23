@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly>
+    <CompanyName>OWASP Contributors</CompanyName>
+    <ProductName>GrokAssembly</ProductName>
+    <ProductVersion>3.0.0.0</ProductVersion>
+    <Comments>Inspects a .NET Assembly to determine Company, Product, and Version information</Comments>
+    <FileDescription>GrokAssembly</FileDescription>
+    <FileName>/Users/jeremy/Projects/GrokAssembly/GrokAssembly/bin/Release/netcoreapp2.0/GrokAssembly.dll</FileName>
+    <FileVersion>3.0.0.0</FileVersion>
+    <InternalName>GrokAssembly.exe</InternalName>
+    <OriginalFilename>GrokAssembly.exe</OriginalFilename>
+    <fullname>GrokAssembly, Version=3.0.0.0, Culture=neutral, PublicKeyToken=null</fullname>
+    <namespaces>
+        <namespace>GrokAssembly</namespace>
+    </namespaces>
+</assembly>
