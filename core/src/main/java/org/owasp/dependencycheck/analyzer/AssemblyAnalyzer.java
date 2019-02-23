@@ -175,41 +175,12 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                 throw new AnalysisException(error);
             }
             if (data.getWarning() != null) {
-                LOGGER.debug("Grok Assembly - could not get namespace on dependency `{}` - ()", dependency.getActualFilePath(), data.getWarning());
+                LOGGER.debug(data.getWarning());
             }
-
-            StringBuilder sb = new StringBuilder();
-            if (!StringUtils.isEmpty(data.getFileDescription())) {
-                sb.append(data.getFileDescription());
-            }
-            if (!StringUtils.isEmpty(data.getComments())) {
-                if (sb.length() > 0) {
-                    sb.append("\n\n");
-                }
-                sb.append(data.getComments());
-            }
-            if (!StringUtils.isEmpty(data.getLegalCopyright())) {
-                if (sb.length() > 0) {
-                    sb.append("\n\n");
-                }
-                sb.append(data.getLegalCopyright());
-            }
-            if (!StringUtils.isEmpty(data.getLegalTrademarks())) {
-                if (sb.length() > 0) {
-                    sb.append("\n");
-                }
-                sb.append(data.getLegalTrademarks());
-            }
-            final String description = sb.toString();
-            if (description.length() > 0) {
-                dependency.setDescription(description);
-                addMatchingValues(data.getNamespaces(), description, dependency, EvidenceType.VENDOR);
-                addMatchingValues(data.getNamespaces(), description, dependency, EvidenceType.PRODUCT);
-            }
-
             if (!StringUtils.isEmpty(data.getProductVersion())) {
                 dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "ProductVersion", data.getProductVersion(), Confidence.HIGHEST);
             }
+
             if (!StringUtils.isEmpty(data.getFileVersion())) {
                 dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "FileVersion", data.getFileVersion(), Confidence.HIGHEST);
                 if ((data.getFileVersion()).equals(data.getProductVersion()) || (data.getFileVersion()).startsWith(data.getProductVersion())) {
@@ -218,16 +189,14 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
             }
             if (!StringUtils.isEmpty(data.getCompanyName())) {
                 dependency.addEvidence(EvidenceType.VENDOR, "grokassembly", "CompanyName", data.getCompanyName(), Confidence.HIGHEST);
-                addMatchingValues(data.getNamespaces(), data.getCompanyName(), dependency, EvidenceType.VENDOR);
             }
 
             if (!StringUtils.isEmpty(data.getProductName())) {
                 dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "ProductName", data.getProductName(), Confidence.HIGHEST);
-                addMatchingValues(data.getNamespaces(), data.getProductName(), dependency, EvidenceType.PRODUCT);
             }
+
             if (!StringUtils.isEmpty(data.getFileDescription())) {
                 dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "FileDescription", data.getFileDescription(), Confidence.HIGH);
-                addMatchingValues(data.getNamespaces(), data.getFileDescription(), dependency, EvidenceType.PRODUCT);
             }
 
             final String internalName = data.getInternalName();
