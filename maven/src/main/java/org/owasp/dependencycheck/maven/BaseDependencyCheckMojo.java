@@ -632,34 +632,12 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
     private Retirejs retirejs;
 
     /**
-<<<<<<< HEAD
-=======
-     * The Proxy URL.
-     *
-     * @deprecated Please use mavenSettings instead
-     */
-    @SuppressWarnings("CanBeFinal")
-    @Parameter(property = "proxyUrl", defaultValue = "", required = false)
-    @Deprecated
-    private String proxyUrl = null;
-    /**
-     * Sets whether or not the external report format should be used.
-     *
-     * @deprecated the internal report is no longer supported
-     */
-    @SuppressWarnings("CanBeFinal")
-    @Parameter(property = "externalReport")
-    @Deprecated
-    private String externalReport = null;
-
-    /**
      * The list of artifacts (and their transitive dependencies) to exclude from the check.
      */
     @Parameter
     private List<String> excludes;
 
     /**
->>>>>>> 852171a1e45ac8ab68603958cb75680f8c126f2b
      * The artifact scope filter.
      */
     private Filter<String> artifactScopeExcluded;
