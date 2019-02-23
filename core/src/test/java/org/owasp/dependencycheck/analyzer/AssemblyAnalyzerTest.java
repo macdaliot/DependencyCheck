@@ -82,7 +82,7 @@ public class AssemblyAnalyzerTest extends BaseTest {
             } else {
                 LOGGER.warn("Exception setting up AssemblyAnalyzer. Tests will be incomplete");
             }
-            Assume.assumeNoException("Is mono installed? TESTS WILL BE INCOMPLETE", e);
+            Assume.assumeNoException("Is dotnet installed? TESTS WILL BE INCOMPLETE", e);
         }
     }
 
@@ -131,8 +131,8 @@ public class AssemblyAnalyzerTest extends BaseTest {
         File f = BaseTest.getResourceAsFile(this, "GrokAssembly.dll");
         Dependency d = new Dependency(f);
         analyzer.analyze(d, null);
-        assertTrue(d.contains(EvidenceType.VENDOR, new Evidence("grokassembly", "vendor", "OWASP", Confidence.HIGH)));
-        assertTrue(d.contains(EvidenceType.PRODUCT, new Evidence("grokassembly", "product", "GrokAssembly", Confidence.HIGH)));
+        assertTrue(d.contains(EvidenceType.VENDOR, new Evidence("grokassembly", "CompanyName", "OWASP Contributors", Confidence.HIGHEST)));
+        assertTrue(d.contains(EvidenceType.PRODUCT, new Evidence("grokassembly", "ProductName", "GrokAssembly", Confidence.HIGHEST)));
     }
 
     @Test
@@ -142,9 +142,11 @@ public class AssemblyAnalyzerTest extends BaseTest {
 
         Dependency d = new Dependency(f);
         analyzer.analyze(d, null);
-        assertTrue(d.contains(EvidenceType.VERSION, new Evidence("grokassembly", "version", "1.2.13.0", Confidence.HIGHEST)));
-        assertTrue(d.contains(EvidenceType.VENDOR, new Evidence("grokassembly", "vendor", "The Apache Software Foundation", Confidence.HIGH)));
-        assertTrue(d.contains(EvidenceType.PRODUCT, new Evidence("grokassembly", "product", "log4net", Confidence.HIGH)));
+        assertTrue(d.contains(EvidenceType.VERSION, new Evidence("grokassembly", "FileVersion", "1.2.13.0", Confidence.HIGHEST)));
+        assertEquals("1.2.13.0", d.getVersion());
+        assertTrue(d.contains(EvidenceType.VENDOR, new Evidence("grokassembly", "CompanyName", "The Apache Software Foundation", Confidence.HIGHEST)));
+        assertTrue(d.contains(EvidenceType.PRODUCT, new Evidence("grokassembly", "ProductName", "log4net", Confidence.HIGHEST)));
+        assertEquals("log4net", d.getName());
     }
 
     @Test
@@ -178,11 +180,7 @@ public class AssemblyAnalyzerTest extends BaseTest {
         // been set. If that's the case, then we have to make it such that when we recover,
         // null still comes back. But you can't put a null value in a HashMap, so we have to set
         // the system property rather than the setting.
-        if (oldValue == null) {
-            System.setProperty(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH, "/yooser/bine/mono");
-        } else {
-            getSettings().setString(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH, "/yooser/bine/mono");
-        }
+        System.setProperty(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH, "/yooser/bine/mono");
 
         String oldProp = System.getProperty(LOG_KEY, "info");
         try {
@@ -204,7 +202,7 @@ public class AssemblyAnalyzerTest extends BaseTest {
             if (oldValue == null) {
                 System.getProperties().remove(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH);
             } else {
-                getSettings().setString(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH, oldValue);
+                System.setProperty(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH, oldValue);
             }
         }
     }

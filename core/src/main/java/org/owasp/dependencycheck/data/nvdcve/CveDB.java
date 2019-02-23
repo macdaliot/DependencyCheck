@@ -27,12 +27,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.IOException;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.collections.map.AbstractReferenceMap.HARD;
@@ -1478,18 +1480,45 @@ public final class CveDB implements AutoCloseable {
      * ensure orphan entries are removed.
      */
     public synchronized void cleanupDatabase() {
+        LOGGER.info("Begin database maintenance");
+        final long start = System.currentTimeMillis();
         clearCache();
         try (PreparedStatement psOrphans = getPreparedStatement(CLEANUP_ORPHANS);
-                PreparedStatement psEcosystem = getPreparedStatement(UPDATE_ECOSYSTEM)) {
+                PreparedStatement psEcosystem = getPreparedStatement(UPDATE_ECOSYSTEM);) {
             if (psEcosystem != null) {
                 psEcosystem.executeUpdate();
             }
             if (psOrphans != null) {
                 psOrphans.executeUpdate();
             }
+            final long millis = System.currentTimeMillis() - start;
+            final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
+            LOGGER.info("End database maintenance (%s seconds)", seconds);
         } catch (SQLException ex) {
             LOGGER.error("An unexpected SQL Exception occurred; please see the verbose log for more details.");
             LOGGER.debug("", ex);
+        }
+    }
+
+    /**
+     * If the database is using an H2 file based database calling
+     * <code>compaxt()</code> will de-fragment and compact the database.
+     */
+    public void compact() {
+        if (ConnectionFactory.isH2Connection(settings)) {
+            final long start = System.currentTimeMillis();
+            try (CallableStatement psCompaxt = connection.prepareCall("SHUTDOWN DEFRAG")) {
+                if (psCompaxt != null) {
+                    LOGGER.info("Begin database compaction");
+                    psCompaxt.execute();
+                    final long millis = System.currentTimeMillis() - start;
+                    final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
+                    LOGGER.info("Begin database compaction ({} seconds)", seconds);
+                }
+            } catch (SQLException ex) {
+                LOGGER.error("An unexpected SQL Exception occurred compacting the database; please see the verbose log for more details.");
+                LOGGER.debug("", ex);
+            }
         }
     }
 

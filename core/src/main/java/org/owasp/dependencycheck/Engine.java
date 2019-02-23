@@ -912,6 +912,8 @@ public class Engine implements FileFilter, AutoCloseable {
                     final CachedWebDataSource source = iterator.next();
                     source.update(this);
                 }
+
+                database.compact();
                 database.close();
                 database = null;
                 LOGGER.info("Check for updates complete ({} ms)", System.currentTimeMillis() - updateStart);
