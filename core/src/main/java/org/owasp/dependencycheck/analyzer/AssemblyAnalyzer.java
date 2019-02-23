@@ -48,11 +48,11 @@ import javax.annotation.concurrent.ThreadSafe;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.dependencycheck.exception.InitializationException;
-import org.apache.commons.lang3.SystemUtils;
 import org.owasp.dependencycheck.dependency.EvidenceType;
 import org.owasp.dependencycheck.dependency.naming.GenericIdentifier;
-import org.owasp.dependencycheck.utils.DependencyVersionUtil;
 import org.owasp.dependencycheck.utils.XmlUtils;
+import org.owasp.dependencycheck.xml.assembly.AssemblyData;
+import org.owasp.dependencycheck.xml.assembly.GrokParser;
 
 /**
  * Analyzer for getting company, product, and version information from a .NET
@@ -145,9 +145,8 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
         final Document doc;
         try {
             final Process proc = pb.start();
-            final DocumentBuilder builder = XmlUtils.buildSecureDocumentBuilder();
-
-            doc = builder.parse(proc.getInputStream());
+            GrokParser parser = new GrokParser();
+            AssemblyData data = parser.parse(proc.getInputStream());
 
             // Try evacuating the error stream
             final String errorStream = IOUtils.toString(proc.getErrorStream(), StandardCharsets.UTF_8);
@@ -172,58 +171,38 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                 return;
             }
 
-            final XPath xpath = XPathFactory.newInstance().newXPath();
-
             // First, see if there was an error
-            final String error = xpath.evaluate("/assembly/error", doc);
+            final String error = data.getError();
             if (error != null && !error.isEmpty()) {
                 throw new AnalysisException(error);
             }
-
-            /*
-                   <CompanyName>OWASP Contributors</CompanyName>
-                   <ProductName>GrokAssembly</ProductName>
-                   <ProductVersion>3.0.0.0</ProductVersion>
-                <Comments>Inspects a .NET Assembly to determine Company, Product, and Version information</Comments>
-                   <FileDescription>GrokAssembly</FileDescription>
-                   <FileName>/Users/jeremy/Projects/GrokAssembly/GrokAssembly/bin/Release/netcoreapp2.0/GrokAssembly.dll</FileName>
-                   <FileVersion>3.0.0.0</FileVersion>
-                   <InternalName>GrokAssembly.exe</InternalName>
-                   <OriginalFilename>GrokAssembly.exe</OriginalFilename>
-                <fullname>GrokAssembly, Version=3.0.0.0, Culture=neutral, PublicKeyToken=null</fullname>
-                <namespaces>
-                    <namespace>GrokAssembly</namespace>
-                </namespaces>
-             */
-            final String productVersion = xpath.evaluate("/assembly/ProductVersion", doc);
-            if (productVersion != null && !productVersion.isEmpty()) {
-                dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "ProductVersion", productVersion, Confidence.HIGHEST);
+            if (data.getWarning() != null) {
+                LOGGER.debug(data.getWarning());
             }
-            final String fileVersion = xpath.evaluate("/assembly/FileVersion", doc);
-            if (fileVersion != null && !fileVersion.isEmpty()) {
-                dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "FileVersion", fileVersion, Confidence.HIGHEST);
-            }
-            if (fileVersion != null && !fileVersion.isEmpty() && (fileVersion.equals(productVersion) || fileVersion.startsWith(productVersion))) {
-                dependency.setVersion(fileVersion);
+            if (!StringUtils.isEmpty(data.getProductVersion())) {
+                dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "ProductVersion", data.getProductVersion(), Confidence.HIGHEST);
             }
 
-            final String vendor = xpath.evaluate("/assembly/CompanyName", doc);
-            if (vendor != null && !vendor.isEmpty()) {
-                dependency.addEvidence(EvidenceType.VENDOR, "grokassembly", "CompanyName", vendor, Confidence.HIGHEST);
+            if (!StringUtils.isEmpty(data.getFileVersion())) {
+                dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "FileVersion", data.getFileVersion(), Confidence.HIGHEST);
+                if ((data.getFileVersion()).equals(data.getProductVersion()) || (data.getFileVersion()).startsWith(data.getProductVersion())) {
+                    dependency.setVersion(data.getFileVersion());
+                }
+            }
+            if (!StringUtils.isEmpty(data.getCompanyName())) {
+                dependency.addEvidence(EvidenceType.VENDOR, "grokassembly", "CompanyName", data.getCompanyName(), Confidence.HIGHEST);
             }
 
-            final String product = xpath.evaluate("/assembly/ProductName", doc);
-            if (product != null && !product.isEmpty()) {
-                dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "ProductName", product, Confidence.HIGHEST);
+            if (!StringUtils.isEmpty(data.getProductName())) {
+                dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "ProductName", data.getProductName(), Confidence.HIGHEST);
             }
 
-            final String fileDescription = xpath.evaluate("/assembly/FileDescription", doc);
-            if (fileDescription != null && !fileDescription.isEmpty()) {
-                dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "FileDescription", fileDescription, Confidence.HIGH);
+            if (!StringUtils.isEmpty(data.getFileDescription())) {
+                dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "FileDescription", data.getFileDescription(), Confidence.HIGH);
             }
 
-            final String internalName = xpath.evaluate("/assembly/InternalName", doc);
-            if (internalName != null && !internalName.isEmpty()) {
+            final String internalName = data.getInternalName();
+            if (!StringUtils.isEmpty(internalName)) {
                 dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "InternalName", internalName, Confidence.MEDIUM);
                 if (dependency.getName() == null && StringUtils.containsIgnoreCase(dependency.getActualFile().getName(), internalName)) {
                     final String ext = FileUtils.getFileExtension(internalName);
@@ -235,8 +214,8 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                 }
             }
 
-            final String originalFilename = xpath.evaluate("/assembly/OriginalFilename", doc);
-            if (originalFilename != null && !originalFilename.isEmpty()) {
+            final String originalFilename = data.getOriginalFilename();
+            if (!StringUtils.isEmpty(originalFilename)) {
                 dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "OriginalFilename", originalFilename, Confidence.MEDIUM);
                 if (dependency.getName() == null && StringUtils.containsIgnoreCase(dependency.getActualFile().getName(), originalFilename)) {
                     final String ext = FileUtils.getFileExtension(originalFilename);
@@ -252,9 +231,7 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                         String.format("%s@%s", dependency.getName(), dependency.getVersion()),
                         Confidence.MEDIUM));
             }
-        } catch (ParserConfigurationException pce) {
-            throw new AnalysisException("Error initializing the assembly analyzer", pce);
-        } catch (IOException | XPathExpressionException ioe) {
+        } catch (IOException ioe) {
             throw new AnalysisException(ioe);
         } catch (SAXException saxe) {
             LOGGER.error("----------------------------------------------------");
