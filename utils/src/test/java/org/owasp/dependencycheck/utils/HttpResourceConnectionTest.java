@@ -17,6 +17,7 @@
  */
 package org.owasp.dependencycheck.utils;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.zip.GZIPInputStream;
@@ -36,16 +37,13 @@ public class HttpResourceConnectionTest extends BaseTest {
      */
     @Test
     public void testFetch() throws Exception {
-        URL url = new URL(getSettings().getString(Settings.KEYS.CVE_MODIFIED_JSON));
+        URL url = new URL(getSettings().getString(Settings.KEYS.ENGINE_VERSION_CHECK_URL));
         try (HttpResourceConnection resource = new HttpResourceConnection(getSettings())) {
-            InputStream in = new GZIPInputStream(resource.fetch(url));
+            InputStream in = resource.fetch(url);
             byte[] read = new byte[90];
             in.read(read);
             String text = new String(read, "UTF-8");
-            assertTrue(text.charAt(0) == '{');
-            assertTrue(text.contains("\"CVE_data_type\""));
-            assertTrue(text.contains("\"CVE_data_format\""));
-            assertTrue(text.contains("\"CVE_data_version\""));
+            assertTrue(text.matches("^\\d+\\.\\d+\\.\\d+.*"));
             assertFalse(resource.isClosed());
         }
     }
@@ -65,7 +63,7 @@ public class HttpResourceConnectionTest extends BaseTest {
      */
     @Test
     public void testGetLastModified() throws Exception {
-        URL url = new URL(getSettings().getString(Settings.KEYS.CVE_MODIFIED_JSON));
+        URL url = new URL(getSettings().getString(Settings.KEYS.ENGINE_VERSION_CHECK_URL));
         HttpResourceConnection instance = new HttpResourceConnection(getSettings());
         long timestamp = instance.getLastModified(url);
         assertTrue("timestamp equal to zero?", timestamp > 0);
@@ -78,7 +76,7 @@ public class HttpResourceConnectionTest extends BaseTest {
     public void testIsClosed() throws Exception {
         HttpResourceConnection resource = null;
         try {
-            URL url = new URL(getSettings().getString(Settings.KEYS.CVE_MODIFIED_JSON));
+            URL url = new URL(getSettings().getString(Settings.KEYS.ENGINE_VERSION_CHECK_URL));
             resource = new HttpResourceConnection(getSettings());
             resource.fetch(url);
             assertFalse(resource.isClosed());
