@@ -247,23 +247,30 @@ public class NvdCveUpdater implements CachedWebDataSource {
             LOGGER.info("NVD CVE requires several updates; this could take a couple of minutes.");
         }
 
+        DownloadTask runLast = null;
         final Set<Future<Future<ProcessTask>>> downloadFutures = new HashSet<>(maxUpdates);
         for (NvdCveInfo cve : updateable) {
             if (cve.getNeedsUpdate()) {
                 final DownloadTask call = new DownloadTask(cve, processingExecutorService, cveDb, settings);
-                final boolean added = downloadFutures.add(downloadExecutorService.submit(call));
-                if (!added) {
-                    throw new UpdateException("Unable to add the download task for " + cve.getId());
+                if (call.isModified()) {
+                    runLast = call;
+                } else {
+                    final boolean added = downloadFutures.add(downloadExecutorService.submit(call));
+                    if (!added) {
+                        throw new UpdateException("Unable to add the download task for " + cve.getId());
+                    }
                 }
             }
         }
 
-        //next, move the future future processTasks to just future processTasks
+        //next, move the future future processTasks to just future processTasks and check for errors.
         final Set<Future<ProcessTask>> processFutures = new HashSet<>(maxUpdates);
         for (Future<Future<ProcessTask>> future : downloadFutures) {
             final Future<ProcessTask> task;
             try {
                 task = future.get();
+                ProcessTask current = (ProcessTask) task.get();
+                processFutures.add(task);
             } catch (InterruptedException ex) {
                 LOGGER.debug("Thread was interrupted during download", ex);
                 Thread.currentThread().interrupt();
@@ -271,12 +278,6 @@ public class NvdCveUpdater implements CachedWebDataSource {
             } catch (ExecutionException ex) {
                 LOGGER.debug("Thread was interrupted during download execution", ex);
                 throw new UpdateException("The execution of the download was interrupted", ex);
-            }
-            if (task == null) {
-                LOGGER.debug("Thread was interrupted during download");
-                throw new UpdateException("The download was interrupted; unable to complete the update");
-            } else {
-                processFutures.add(task);
             }
         }
 
@@ -293,6 +294,25 @@ public class NvdCveUpdater implements CachedWebDataSource {
             } catch (ExecutionException ex) {
                 LOGGER.debug("Execution Exception during process", ex);
                 throw new UpdateException(ex);
+            }
+        }
+
+        if (runLast != null) {
+            Future<Future<ProcessTask>> modified = downloadExecutorService.submit(runLast);
+            final Future<ProcessTask> task;
+            try {
+                task = modified.get();
+                ProcessTask last = (ProcessTask) task.get();
+                if (last.getException() != null) {
+                    throw last.getException();
+                }
+            } catch (InterruptedException ex) {
+                LOGGER.debug("Thread was interrupted during download", ex);
+                Thread.currentThread().interrupt();
+                throw new UpdateException("The download was interrupted", ex);
+            } catch (ExecutionException ex) {
+                LOGGER.debug("Thread was interrupted during download execution", ex);
+                throw new UpdateException("The execution of the download was interrupted", ex);
             }
         }
 

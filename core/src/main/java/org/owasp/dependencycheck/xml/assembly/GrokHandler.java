@@ -48,43 +48,43 @@ public class GrokHandler extends DefaultHandler {
     /**
      * An XML node name.
      */
-    private final String COMPANY_NAME = "CompanyName";
+    private final String COMPANY_NAME = "companyName";
     /**
      * An XML node name.
      */
-    private final String PRODUCT_NAME = "ProductName";
+    private final String PRODUCT_NAME = "productName";
     /**
      * An XML node name.
      */
-    private final String PRODUCT_VERSION = "ProductVersion";
+    private final String PRODUCT_VERSION = "productVersion";
     /**
      * An XML node name.
      */
-    private final String COMMENTS = "Comments";
+    private final String COMMENTS = "comments";
     /**
      * An XML node name.
      */
-    private final String FILE_DESCRIPTION = "FileDescription";
+    private final String FILE_DESCRIPTION = "fileDescription";
     /**
      * An XML node name.
      */
-    private final String FILE_NAME = "FileName";
+    private final String FILE_NAME = "fileName";
     /**
      * An XML node name.
      */
-    private final String FILE_VERSION = "FileVersion";
+    private final String FILE_VERSION = "fileVersion";
     /**
      * An XML node name.
      */
-    private final String INTERNAL_NAME = "InternalName";
+    private final String INTERNAL_NAME = "internalName";
     /**
      * An XML node name.
      */
-    private final String ORIGINAL_FILE_NAME = "OriginalFilename";
+    private final String ORIGINAL_FILE_NAME = "originalFilename";
     /**
      * An XML node name.
      */
-    private final String FULLNAME = "fullname";
+    private final String FULLNAME = "fullName";
     /**
      * An XML node name.
      */
