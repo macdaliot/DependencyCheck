@@ -2,7 +2,6 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:element name="assembly">
     <xs:complexType>
-<<<<<<< HEAD
       <xs:all>
         <xs:element type="xs:string" name="companyName"  minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="productName" minOccurs="0" maxOccurs="1"/>
@@ -16,19 +15,6 @@
         <xs:element type="xs:string" name="legalCopyright" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="legalTrademarks" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="fullName" minOccurs="0" maxOccurs="1"/>
-=======
-      <xs:sequence>
-        <xs:element type="xs:string" name="CompanyName"  minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:string" name="ProductName" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:string" name="ProductVersion" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:string" name="Comments" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:string" name="FileDescription" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:string" name="FileName" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:string" name="FileVersion" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:string" name="InternalName" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:string" name="OriginalFilename" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:string" name="fullname" minOccurs="0" maxOccurs="1"/>
->>>>>>> wip
         <xs:element name="namespaces" minOccurs="0" maxOccurs="1">
           <xs:complexType>
             <xs:sequence minOccurs="0" maxOccurs="unbounded">
@@ -38,11 +24,7 @@
         </xs:element>
         <xs:element type="xs:string" name="warning"  minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="error"  minOccurs="0" maxOccurs="1"/>
-<<<<<<< HEAD
       </xs:all>
-=======
-      </xs:sequence>
->>>>>>> wip
     </xs:complexType>
   </xs:element>
 </xs:schema>

@@ -1494,7 +1494,6 @@ public final class CveDB implements AutoCloseable {
             final long millis = System.currentTimeMillis() - start;
             final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
             LOGGER.info("End database maintenance ({} seconds)", seconds);
-
         } catch (SQLException ex) {
             LOGGER.error("An unexpected SQL Exception occurred; please see the verbose log for more details.");
             LOGGER.debug("", ex);

@@ -23,15 +23,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-<<<<<<< HEAD
 import javax.xml.parsers.SAXParser;
 import static org.junit.Assert.assertEquals;
-=======
-import java.util.List;
-import javax.xml.parsers.SAXParser;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
->>>>>>> wip
+
 import org.junit.Test;
 import org.owasp.dependencycheck.BaseTest;
 import org.owasp.dependencycheck.utils.XmlUtils;
