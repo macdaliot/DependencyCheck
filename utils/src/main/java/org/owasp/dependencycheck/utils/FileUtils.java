@@ -97,8 +97,8 @@ public final class FileUtils {
      *
      * @param base the base directory to create a temporary directory within
      * @return the temporary directory
-     * @throws java.io.IOException thrown when a directory cannot be created within the
-     * base directory
+     * @throws java.io.IOException thrown when a directory cannot be created
+     * within the base directory
      */
     @NotNull
     public static File createTempDirectory(@Nullable final File base) throws IOException {
@@ -125,8 +125,8 @@ public final class FileUtils {
     }
 
     /**
-     * Close the given {@link java.io.Closeable} instance, ignoring nulls, and logging
-     * any thrown {@link java.io.IOException}.
+     * Close the given {@link java.io.Closeable} instance, ignoring nulls, and
+     * logging any thrown {@link java.io.IOException}.
      *
      * @param closeable to be closed
      */
@@ -153,7 +153,7 @@ public final class FileUtils {
                 ? classLoader.getResourceAsStream(resource)
                 : ClassLoader.getSystemResourceAsStream(resource);
 
-        if(inputStream == null) {
+        if (inputStream == null) {
             try {
                 return new FileInputStream(resource);
             } catch (final FileNotFoundException e) {
@@ -161,5 +161,24 @@ public final class FileUtils {
             }
         }
         return inputStream;
+    }
+
+    /**
+     * Returns a File object for the given resource. The resource is attempted
+     * to be loaded from the class loader.
+     *
+     * @param resource path
+     * @return the file reference for the resource
+     */
+    public static File getResourceAsFile(final String resource) {
+        final ClassLoader classLoader = FileUtils.class.getClassLoader();
+        final String path = classLoader != null
+                ? classLoader.getResource(resource).getFile()
+                : ClassLoader.getSystemResource(resource).getFile();
+
+        if (path == null) {
+            return new File(resource);
+        }
+        return new File(path);
     }
 }

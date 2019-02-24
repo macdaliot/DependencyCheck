@@ -89,23 +89,8 @@ public class AssemblyAnalyzerTest extends BaseTest {
     private void assertGrokAssembly() throws IOException {
         // There must be an .exe and a .config files created in the temp
         // directory and they must match the resources they were created from.
-        File grokAssemblyExeFile = null;
-        File grokAssemblyConfigFile = null;
-
-        File tempDirectory = getSettings().getTempDirectory();
-        for (File file : tempDirectory.listFiles()) {
-            String filename = file.getName();
-            if (filename.startsWith("GKA") && filename.endsWith(".dll")) {
-                grokAssemblyExeFile = file;
-                break;
-            }
-        }
+        File grokAssemblyExeFile = analyzer.getGrokAssemblyPath();
         assertTrue("The GrokAssembly executable was not created.", grokAssemblyExeFile.isFile());
-        //grokAssemblyConfigFile = new File(grokAssemblyExeFile.getPath() + ".config");
-        //assertTrue("The GrokAssembly config was not created.", grokAssemblyConfigFile.isFile());
-
-        assertFileContent("The GrokAssembly executable has incorrect content.", "GrokAssembly.dll", grokAssemblyExeFile);
-        //assertFileContent("The GrokAssembly config has incorrect content.", "GrokAssembly.exe.config", grokAssemblyConfigFile);
     }
 
     private void assertFileContent(String message, String expectedResourceName, File actualFile) throws IOException {
@@ -128,7 +113,7 @@ public class AssemblyAnalyzerTest extends BaseTest {
     @Test
     public void testAnalysis() throws Exception {
         assumeNotNull(analyzer.buildArgumentList());
-        File f = BaseTest.getResourceAsFile(this, "GrokAssembly.dll");
+        File f = analyzer.getGrokAssemblyPath();
         Dependency d = new Dependency(f);
         analyzer.analyze(d, null);
         assertTrue(d.contains(EvidenceType.VENDOR, new Evidence("grokassembly", "CompanyName", "OWASP Contributors", Confidence.HIGHEST)));
