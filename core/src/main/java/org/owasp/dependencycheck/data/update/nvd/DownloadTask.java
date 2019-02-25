@@ -161,8 +161,7 @@ public class DownloadTask implements Callable<Future<ProcessTask>> {
             file.deleteOnExit();
         }
     }
-    
-    
+
     /**
      * Returns true if the process task is for the modified json file from the
      * NVD.

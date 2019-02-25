@@ -1101,7 +1101,8 @@ public class Engine implements FileFilter, AutoCloseable {
      * @throws ExceptionCollection a collection of exceptions that occurred
      * during analysis
      */
-    private void throwFatalExceptionCollection(String message, @NotNull final Throwable throwable, @NotNull final List<Throwable> exceptions) throws ExceptionCollection {
+    private void throwFatalExceptionCollection(String message, @NotNull final Throwable throwable,
+            @NotNull final List<Throwable> exceptions) throws ExceptionCollection {
         LOGGER.error(message);
         LOGGER.debug("", throwable);
         exceptions.add(throwable);
@@ -1121,8 +1122,8 @@ public class Engine implements FileFilter, AutoCloseable {
      * @throws ReportException thrown if there is an error generating the report
      */
     public synchronized void writeReports(String applicationName, @Nullable final String groupId,
-                                          @Nullable final String artifactId, @Nullable final String version,
-                                          @NotNull final File outputDir, String format) throws ReportException {
+            @Nullable final String artifactId, @Nullable final String version,
+            @NotNull final File outputDir, String format) throws ReportException {
         if (mode == Mode.EVIDENCE_COLLECTION) {
             throw new UnsupportedOperationException("Cannot generate report in evidence collection mode.");
         }

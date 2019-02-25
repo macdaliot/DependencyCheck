@@ -22,7 +22,6 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.filter.ThresholdFilter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -39,8 +38,6 @@ import org.owasp.dependencycheck.utils.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.core.FileAppender;
-import ch.qos.logback.core.filter.EvaluatorFilter;
-import ch.qos.logback.core.filter.Filter;
 import org.apache.tools.ant.types.LogLevel;
 import org.owasp.dependencycheck.data.update.exception.UpdateException;
 import org.owasp.dependencycheck.exception.ExceptionCollection;
@@ -299,8 +296,8 @@ public class App {
             if (!dep.getVulnerabilities().isEmpty()) {
                 for (Vulnerability vuln : dep.getVulnerabilities()) {
                     LOGGER.debug("VULNERABILITY FOUND {}", dep.getDisplayFileName());
-                    if ((vuln.getCvssV2() != null && vuln.getCvssV2().getScore() > cvssFailScore) ||
-                            (vuln.getCvssV3() != null && vuln.getCvssV3().getBaseScore() > cvssFailScore)) {
+                    if ((vuln.getCvssV2() != null && vuln.getCvssV2().getScore() > cvssFailScore)
+                            || (vuln.getCvssV3() != null && vuln.getCvssV3().getBaseScore() > cvssFailScore)) {
                         retCode = 1;
                     }
                 }
@@ -544,7 +541,7 @@ public class App {
         fa.start();
         final ch.qos.logback.classic.Logger rootLogger = context.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
         rootLogger.setLevel(Level.DEBUG);
-        ThresholdFilter filter = new ThresholdFilter();
+        final ThresholdFilter filter = new ThresholdFilter();
         filter.setLevel(LogLevel.INFO.getValue());
         filter.setContext(context);
         filter.start();

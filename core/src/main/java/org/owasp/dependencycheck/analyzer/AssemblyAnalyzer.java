@@ -142,8 +142,8 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
         final Document doc;
         try {
             final Process proc = pb.start();
-            GrokParser parser = new GrokParser();
-            AssemblyData data = parser.parse(proc.getInputStream());
+            final GrokParser parser = new GrokParser();
+            final AssemblyData data = parser.parse(proc.getInputStream());
 
             // Try evacuating the error stream
             final String errorStream = IOUtils.toString(proc.getErrorStream(), StandardCharsets.UTF_8);
@@ -177,7 +177,7 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                 LOGGER.debug("Grok Assembly - could not get namespace on dependency `{}` - ()", dependency.getActualFilePath(), data.getWarning());
             }
 
-            StringBuilder sb = new StringBuilder();
+            final StringBuilder sb = new StringBuilder();
             if (!StringUtils.isEmpty(data.getFileDescription())) {
                 sb.append(data.getFileDescription());
             }
@@ -387,33 +387,26 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
     }
 
     /**
-     * Tests to see if a file is in the system path. <b>Note</b> - the current
-     * implementation only works on non-windows platforms. For purposes of the
-     * AssemblyAnalyzer this is okay as this is only needed on Mac/*nix.
+     * Tests to see if a file is in the system path.
      *
-     * @param file the executable to look for
-     * @return <code>true</code> if the file exists; otherwise
+     * @return <code>true</code> if dotnet could be found in the path; otherwise
      * <code>false</code>
      */
     private boolean isDotnetPath() {
-        String[] args = new String[2];
+        final String[] args = new String[2];
         args[0] = "dotnet";
         args[1] = "--version";
         final ProcessBuilder pb = new ProcessBuilder(args);
         try {
-            Map<String, String> envs = pb.environment();
-            LOGGER.error("Path: " + envs.get("Path"));
-            LOGGER.error("PATH: " + envs.get("PATH"));
-            LOGGER.error("SYSE: " + System.getProperty("PATH"));
-            System.getProperties().entrySet().forEach(System.out::println);
+            final Map<String, String> envs = pb.environment();
             final Process proc = pb.start();
-            int retCode = proc.waitFor();
+            final int retCode = proc.waitFor();
             if (retCode == 0) {
                 return true;
             }
-            byte[] version = new byte[50];
+            final byte[] version = new byte[50];
             proc.getInputStream().read(version);
-            String v = new String(version);
+            final String v = new String(version);
             if (v.length() > 0) {
                 return true;
             }

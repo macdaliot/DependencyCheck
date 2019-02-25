@@ -20,7 +20,6 @@ package org.owasp.dependencycheck.maven;
 import com.github.packageurl.MalformedPackageURLException;
 import com.github.packageurl.PackageURL.StandardTypes;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.doxia.sink.Sink;
 import org.apache.maven.execution.MavenSession;
@@ -625,7 +624,8 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
     private Retirejs retirejs;
 
     /**
-     * The list of artifacts (and their transitive dependencies) to exclude from the check.
+     * The list of artifacts (and their transitive dependencies) to exclude from
+     * the check.
      */
     @Parameter
     private List<String> excludes;
@@ -825,13 +825,13 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
             //if we pass in the filter below instead of null to the dependencyGraphBuilder
             final DependencyNode dn = dependencyGraphBuilder.buildDependencyGraph(buildingRequest, null, reactorProjects);
 
-            CollectingDependencyNodeVisitor collectorVisitor = new CollectingDependencyNodeVisitor();
+            final CollectingDependencyNodeVisitor collectorVisitor = new CollectingDependencyNodeVisitor();
             // exclude artifact by pattern and its dependencies
-            DependencyNodeVisitor transitiveFilterVisitor = new FilteringDependencyTransitiveNodeVisitor(collectorVisitor, 
+            final DependencyNodeVisitor transitiveFilterVisitor = new FilteringDependencyTransitiveNodeVisitor(collectorVisitor,
                     new ArtifactDependencyNodeFilter(new PatternExcludesArtifactFilter(getExcludes())));
             // exclude exact artifact but not its dependencies, this filter must be appied on the root for first otherwise
             // in case the exclude has the same groupId of the current bundle its direct dependencies are not visited
-            DependencyNodeVisitor artifactFilter = new FilteringDependencyNodeVisitor(transitiveFilterVisitor,
+            final DependencyNodeVisitor artifactFilter = new FilteringDependencyNodeVisitor(transitiveFilterVisitor,
                     new ArtifactDependencyNodeFilter(new ExcludesArtifactFilter(filterItems)));
             dn.accept(artifactFilter);
 
@@ -1747,7 +1747,7 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
     /**
      * Returns the list of excluded artifacts based on either artifact id or
      * group id and artifact id.
-     * 
+     *
      * @return a list of artifact to exclude
      */
     public List<String> getExcludes() {
