@@ -40,55 +40,55 @@ public class GrokHandler extends DefaultHandler {
     /**
      * An XML node name.
      */
-    private final String ERROR = "error";
+    private static final String ERROR = "error";
     /**
      * An XML node name.
      */
-    private final String WARNING = "warning";
+    private static final String WARNING = "warning";
     /**
      * An XML node name.
      */
-    private final String COMPANY_NAME = "companyName";
+    private static final String COMPANY_NAME = "companyName";
     /**
      * An XML node name.
      */
-    private final String PRODUCT_NAME = "productName";
+    private static final String PRODUCT_NAME = "productName";
     /**
      * An XML node name.
      */
-    private final String PRODUCT_VERSION = "productVersion";
+    private static final String PRODUCT_VERSION = "productVersion";
     /**
      * An XML node name.
      */
-    private final String COMMENTS = "comments";
+    private static final String COMMENTS = "comments";
     /**
      * An XML node name.
      */
-    private final String FILE_DESCRIPTION = "fileDescription";
+    private static final String FILE_DESCRIPTION = "fileDescription";
     /**
      * An XML node name.
      */
-    private final String FILE_NAME = "fileName";
+    private static final String FILE_NAME = "fileName";
     /**
      * An XML node name.
      */
-    private final String FILE_VERSION = "fileVersion";
+    private static final String FILE_VERSION = "fileVersion";
     /**
      * An XML node name.
      */
-    private final String INTERNAL_NAME = "internalName";
+    private static final String INTERNAL_NAME = "internalName";
     /**
      * An XML node name.
      */
-    private final String ORIGINAL_FILE_NAME = "originalFilename";
+    private static final String ORIGINAL_FILE_NAME = "originalFilename";
     /**
      * An XML node name.
      */
-    private final String FULLNAME = "fullName";
+    private static final String FULLNAME = "fullName";
     /**
      * An XML node name.
      */
-    private final String NAMESPACE = "namespace";
+    private static final String NAMESPACE = "namespace";
 
     /**
      * The current rule being read.

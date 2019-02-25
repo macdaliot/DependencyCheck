@@ -760,9 +760,40 @@ Copyright (c) 2012 - Jeremy Long
                     </excludes>
                     <rulesets>
                         <ruleset>${odc.config}/dcrules.xml</ruleset>
-                        <ruleset>/rulesets/java/basic.xml</ruleset>
-                        <ruleset>/rulesets/java/imports.xml</ruleset>
-                        <ruleset>/rulesets/java/unusedcode.xml</ruleset>
+                        <ruleset>category/java/bestpractices.xml/AvoidUsingHardCodedIP</ruleset>
+                        <ruleset>category/java/bestpractices.xml/CheckResultSet</ruleset>
+                        <ruleset>category/java/bestpractices.xml/UnusedFormalParameter</ruleset>
+                        <ruleset>category/java/bestpractices.xml/UnusedImports</ruleset>
+                        <ruleset>category/java/bestpractices.xml/UnusedLocalVariable</ruleset>
+                        <ruleset>category/java/bestpractices.xml/UnusedPrivateField</ruleset>
+                        <ruleset>category/java/bestpractices.xml/UnusedPrivateMethod</ruleset>
+                        <ruleset>category/java/codestyle.xml/DontImportJavaLang</ruleset>
+                        <ruleset>category/java/codestyle.xml/DuplicateImports</ruleset>
+                        <ruleset>category/java/codestyle.xml/ExtendsObject</ruleset>
+                        <ruleset>category/java/codestyle.xml/ForLoopShouldBeWhileLoop</ruleset>
+                        <ruleset>category/java/codestyle.xml/TooManyStaticImports</ruleset>
+                        <ruleset>category/java/codestyle.xml/UnnecessaryFullyQualifiedName</ruleset>
+                        <ruleset>category/java/design.xml/CollapsibleIfStatements</ruleset>
+                        <ruleset>category/java/design.xml/SimplifiedTernary</ruleset>
+                        <ruleset>category/java/errorprone.xml/AvoidBranchingStatementAsLastInLoop</ruleset>
+                        <ruleset>category/java/errorprone.xml/AvoidDecimalLiteralsInBigDecimalConstructor</ruleset>
+                        <ruleset>category/java/errorprone.xml/AvoidMultipleUnaryOperators</ruleset>
+                        <ruleset>category/java/errorprone.xml/AvoidUsingOctalValues</ruleset>
+                        <ruleset>category/java/errorprone.xml/BrokenNullCheck</ruleset>
+                        <ruleset>category/java/errorprone.xml/CheckSkipResult</ruleset>
+                        <ruleset>category/java/errorprone.xml/ClassCastExceptionWithToArray</ruleset>
+                        <ruleset>category/java/errorprone.xml/DontUseFloatTypeForLoopIndices</ruleset>
+                        <ruleset>category/java/errorprone.xml/ImportFromSamePackage</ruleset>
+                        <ruleset>category/java/errorprone.xml/JumbledIncrementer</ruleset>
+                        <ruleset>category/java/errorprone.xml/MisplacedNullCheck</ruleset>
+                        <ruleset>category/java/errorprone.xml/OverrideBothEqualsAndHashcode</ruleset>
+                        <ruleset>category/java/errorprone.xml/ReturnFromFinallyBlock</ruleset>
+                        <ruleset>category/java/errorprone.xml/UnconditionalIfStatement</ruleset>
+                        <ruleset>category/java/multithreading.xml/AvoidThreadGroup</ruleset>
+                        <ruleset>category/java/multithreading.xml/DontCallThreadRun</ruleset>
+                        <ruleset>category/java/multithreading.xml/DoubleCheckedLocking</ruleset>
+                        <ruleset>category/java/performance.xml/BigIntegerInstantiation</ruleset>
+                        <ruleset>category/java/performance.xml/BooleanInstantiation</ruleset>
                     </rulesets>
                 </configuration>
             </plugin>

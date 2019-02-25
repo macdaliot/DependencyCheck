@@ -17,24 +17,28 @@
  */
 package org.owasp.dependencycheck.utils;
 
-import java.io.*;
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
-import org.apache.commons.lang3.SystemUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A collection of utilities for processing information about files.
  *
  * @author Jeremy Long
- * @version $Id: $Id
  */
 public final class FileUtils {
 
@@ -66,8 +70,9 @@ public final class FileUtils {
      */
     @Nullable
     public static String getFileExtension(@NotNull String fileName) {
-        @Nullable final String fileExt = FilenameUtils.getExtension(fileName);
-        return StringUtils.isNoneEmpty(fileExt)? StringUtils.lowerCase(fileExt) : null;
+        @Nullable
+        final String fileExt = FilenameUtils.getExtension(fileName);
+        return StringUtils.isNoneEmpty(fileExt) ? StringUtils.lowerCase(fileExt) : null;
     }
 
     /**
@@ -79,7 +84,7 @@ public final class FileUtils {
      */
     @NotNull
     public static boolean delete(@Nullable File file) {
-        if(file == null) {
+        if (file == null) {
             LOGGER.warn("cannot delete null File");
             return false;
         }
