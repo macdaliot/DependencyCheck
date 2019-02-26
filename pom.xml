@@ -143,7 +143,7 @@ Copyright (c) 2012 - Jeremy Long
         <maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
         <maven-surefire-report-plugin.version>2.22.1</maven-surefire-report-plugin.version>
         <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
-        <findbugs-maven-plugin.version>3.0.5</findbugs-maven-plugin.version>
+        <spotbugs.maven.plugin.version>3.1.11</spotbugs.maven.plugin.version>
         <taglist-maven-plugin.version>2.4</taglist-maven-plugin.version>
         <versions-maven-plugin.version>2.7</versions-maven-plugin.version>
 
@@ -760,20 +760,6 @@ Copyright (c) 2012 - Jeremy Long
                     </excludes>
                     <rulesets>
                         <ruleset>${odc.config}/dcrules.xml</ruleset>
-                        <ruleset>category/java/bestpractices.xml/AvoidUsingHardCodedIP</ruleset>
-                        <ruleset>category/java/bestpractices.xml/CheckResultSet</ruleset>
-                        <ruleset>category/java/bestpractices.xml/UnusedFormalParameter</ruleset>
-                        <ruleset>category/java/bestpractices.xml/UnusedImports</ruleset>
-                        <ruleset>category/java/bestpractices.xml/UnusedLocalVariable</ruleset>
-                        <ruleset>category/java/bestpractices.xml/UnusedPrivateField</ruleset>
-                        <ruleset>category/java/bestpractices.xml/UnusedPrivateMethod</ruleset>
-                        <ruleset>category/java/design.xml/CollapsibleIfStatements</ruleset>
-                        <ruleset>category/java/design.xml/SimplifiedTernary</ruleset>
-                        <ruleset>category/java/multithreading.xml/AvoidThreadGroup</ruleset>
-                        <ruleset>category/java/multithreading.xml/DontCallThreadRun</ruleset>
-                        <ruleset>category/java/multithreading.xml/DoubleCheckedLocking</ruleset>
-                        <ruleset>category/java/performance.xml/BigIntegerInstantiation</ruleset>
-                        <ruleset>category/java/performance.xml/BooleanInstantiation</ruleset>
                     </rulesets>
                 </configuration>
             </plugin>
@@ -828,9 +814,9 @@ Copyright (c) 2012 - Jeremy Long
                 </reportSets>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <version>${findbugs-maven-plugin.version}</version>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs.maven.plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

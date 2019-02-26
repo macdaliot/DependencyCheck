@@ -855,7 +855,7 @@ public class CPEAnalyzer extends AbstractAnalyzer {
         if (!"-".equals(guessCpe.getVersion())) {
             String url = null;
             if (hasBroadMatch) { //if we have a broad match we can add the URL to the best guess.
-                url = String.format(NVD_SEARCH_BROAD_URL, URLEncoder.encode(vendor, "UTF-8"), URLEncoder.encode(product, "UTF-8"));
+                url = String.format(NVD_SEARCH_BROAD_URL, URLEncoder.encode(vendor, UTF8), URLEncoder.encode(product, UTF8));
             }
             if (bestGuessURL != null) {
                 url = bestGuessURL;

@@ -65,7 +65,7 @@ public class GrokParser {
     public AssemblyData parse(File file) throws GrokParseException {
         try (FileInputStream fis = new FileInputStream(file)) {
             return parse(fis);
-        } catch (SAXException | IOException ex) {
+        } catch (IOException ex) {
             LOGGER.debug("", ex);
             throw new GrokParseException(ex);
         }
@@ -77,9 +77,8 @@ public class GrokParser {
      * @param inputStream an InputStream containing assembly data
      * @return the assembly data
      * @throws GrokParseException thrown if the XML cannot be parsed
-     * @throws SAXException thrown if the XML cannot be parsed
      */
-    public AssemblyData parse(InputStream inputStream) throws GrokParseException, SAXException {
+    public AssemblyData parse(InputStream inputStream) throws GrokParseException {
         try (InputStream schema = FileUtils.getResourceAsStream(GROK_SCHEMA)) {
             final GrokHandler handler = new GrokHandler();
             final SAXParser saxParser = XmlUtils.buildSecureSaxParser(schema);
@@ -96,7 +95,7 @@ public class GrokParser {
             throw new GrokParseException(ex);
         } catch (SAXException ex) {
             if (ex.getMessage().contains("Cannot find the declaration of element 'assembly'.")) {
-                throw ex;
+                throw new GrokParseException("Malformed grok xml?", ex);
             } else {
                 LOGGER.debug("", ex);
                 throw new GrokParseException(ex);
