@@ -1068,7 +1068,7 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
      * "import" entry
      */
     private boolean isImportPackage(String key, String value) {
-        final Pattern packageRx = Pattern.compile("^([a-zA-Z0-9_#\\$\\*\\.]+\\s*[,;]\\s*)+([a-zA-Z0-9_#\\$\\*\\.]+\\s*)?$");
+        final Pattern packageRx = Pattern.compile("^(\\s*[a-zA-Z0-9_#\\$\\*\\.]+\\s*[,;])+(\\s*[a-zA-Z0-9_#\\$\\*\\.]+\\s*)?$");
         final boolean matches = packageRx.matcher(value).matches();
         return matches && (key.contains("import") || key.contains("include") || value.length() > 10);
     }
@@ -1198,7 +1198,7 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
     private boolean isPackage(String key, String value) {
 
         return !key.matches(".*(version|title|vendor|name|license|description).*")
-                && value.matches("^([a-zA-Z_][a-zA-Z0-9_\\$]*(\\.[a-zA-Z_][a-zA-Z0-9_\\$]*)*)?$");
+                && value.matches("^[a-zA-Z_][a-zA-Z0-9_\\$]*\\.([a-zA-Z_][a-zA-Z0-9_\\$]*\\.)*([a-zA-Z_][a-zA-Z0-9_\\$]*)$");
 
     }
 

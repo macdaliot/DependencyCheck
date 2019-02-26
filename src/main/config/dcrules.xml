@@ -6,9 +6,18 @@
     http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
 
     <description><![CDATA[
-    A set of rules for the ODC project to ensure loggers are utilized correctly.
+    A set of rules for the ODC project.
     ]]></description>
+    <!--
+    
+    No core rules are being used because of the noise level and the massive customization
+    it would take to get to the rules the project cares about. We are considering remov9ng
+    PMD entirely.
+    -->
 
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="LooseCoupling"/>
+    </rule>
     
     <rule name="LoggerChaining"
           message="Logger should be a field, don't chain it"

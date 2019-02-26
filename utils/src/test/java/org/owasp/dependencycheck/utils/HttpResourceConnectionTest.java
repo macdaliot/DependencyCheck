@@ -17,10 +17,9 @@
  */
 package org.owasp.dependencycheck.utils;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.zip.GZIPInputStream;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -42,7 +41,7 @@ public class HttpResourceConnectionTest extends BaseTest {
             InputStream in = resource.fetch(url);
             byte[] read = new byte[90];
             in.read(read);
-            String text = new String(read, "UTF-8");
+            String text = new String(read, UTF_8);
             assertTrue(text.matches("^\\d+\\.\\d+\\.\\d+.*"));
             assertFalse(resource.isClosed());
         }

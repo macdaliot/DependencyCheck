@@ -20,7 +20,9 @@ package org.owasp.dependencycheck.analyzer;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.owasp.dependencycheck.Engine;
@@ -52,6 +54,7 @@ import org.owasp.dependencycheck.utils.ExtractionException;
 import org.owasp.dependencycheck.utils.ExtractionUtil;
 import org.owasp.dependencycheck.utils.XmlUtils;
 import org.owasp.dependencycheck.xml.assembly.AssemblyData;
+import org.owasp.dependencycheck.xml.assembly.GrokParseException;
 import org.owasp.dependencycheck.xml.assembly.GrokParser;
 
 /**
@@ -262,13 +265,13 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                         String.format("%s@%s", dependency.getName(), dependency.getVersion()),
                         Confidence.MEDIUM));
             }
-        } catch (IOException ioe) {
-            throw new AnalysisException(ioe);
-        } catch (SAXException saxe) {
+        } catch (GrokParseException saxe) {
             LOGGER.error("----------------------------------------------------");
             LOGGER.error("Failed to read the Assembly Analyzer results.");
             LOGGER.error("----------------------------------------------------");
             throw new AnalysisException("Couldn't parse Assembly Analyzer results (GrokAssembly)", saxe);
+        } catch (IOException ioe) {
+            throw new AnalysisException(ioe);
         }
     }
 
@@ -317,11 +320,9 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
             // Try evacuating the error stream
             IOUtils.copy(p.getErrorStream(), NullOutputStream.NULL_OUTPUT_STREAM);
 
-            final DocumentBuilder builder = XmlUtils.buildSecureDocumentBuilder();
-            final Document doc = builder.parse(p.getInputStream());
-            final XPath xpath = XPathFactory.newInstance().newXPath();
-            final String error = xpath.evaluate("/assembly/error", doc);
-            if (p.waitFor() != 1 || error == null || error.isEmpty()) {
+            final GrokParser grok = new GrokParser();
+            final AssemblyData data = grok.parse(p.getInputStream());
+            if (p.waitFor() != 1 || data == null || StringUtils.isEmpty(data.getError())) {
                 LOGGER.warn("An error occurred with the .NET AssemblyAnalyzer, please see the log for more details.");
                 LOGGER.debug("GrokAssembly.dll is not working properly");
                 grokAssembly = null;
@@ -331,7 +332,7 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
         } catch (InitializationException e) {
             setEnabled(false);
             throw e;
-        } catch (IOException | ParserConfigurationException | SAXException | XPathExpressionException | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             LOGGER.warn("An error occurred with the .NET AssemblyAnalyzer;\n"
                     + "this can be ignored unless you are scanning .NET DLLs. Please see the log for more details.");
             LOGGER.debug("Could not execute GrokAssembly {}", e.getMessage());
@@ -406,7 +407,7 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
             }
             final byte[] version = new byte[50];
             proc.getInputStream().read(version);
-            final String v = new String(version);
+            final String v = new String(version, UTF_8);
             if (v.length() > 0) {
                 return true;
             }
