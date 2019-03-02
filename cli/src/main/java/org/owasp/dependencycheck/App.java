@@ -131,7 +131,7 @@ public class App {
                 }
                 final File db;
                 try {
-                    db = new File(settings.getDataDirectory(), settings.getString(Settings.KEYS.DB_FILE_NAME, "dc.mv.db"));
+                    db = new File(settings.getDataDirectory(), settings.getString(Settings.KEYS.DB_FILE_NAME, "odc.mv.db"));
                     if (db.exists()) {
                         if (db.delete()) {
                             LOGGER.info("Database file purged; local copy of the NVD has been removed");

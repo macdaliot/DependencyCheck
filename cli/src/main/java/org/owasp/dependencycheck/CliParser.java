@@ -17,6 +17,7 @@
  */
 package org.owasp.dependencycheck;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.FileNotFoundException;
 
@@ -814,20 +815,22 @@ public final class CliParser {
     }
 
     /**
-     * Returns the username to authenticate to the nexus server if one was specified.
+     * Returns the username to authenticate to the nexus server if one was
+     * specified.
      *
-     * @return the username to authenticate to the nexus server; if none was specified this will
-     * return null;
+     * @return the username to authenticate to the nexus server; if none was
+     * specified this will return null;
      */
     public String getNexusUsername() {
         return line.getOptionValue(ARGUMENT.NEXUS_USERNAME);
     }
 
     /**
-     * Returns the password to authenticate to the nexus server if one was specified.
+     * Returns the password to authenticate to the nexus server if one was
+     * specified.
      *
-     * @return the password to authenticate to the nexus server; if none was specified this will
-     * return null;
+     * @return the password to authenticate to the nexus server; if none was
+     * specified this will return null;
      */
     public String getNexusPassword() {
         return line.getOptionValue(ARGUMENT.NEXUS_PASSWORD);
@@ -870,6 +873,8 @@ public final class CliParser {
      * @param argument the argument
      * @return the argument boolean value
      */
+    @SuppressFBWarnings(justification = "Accepting that this is a bad practice - used a Boolean as we needed three states",
+            value = {"NP_BOOLEAN_RETURN_NULL"})
     public Boolean getBooleanArgument(String argument) {
         if (line != null && line.hasOption(argument)) {
             final String value = line.getOptionValue(argument);
@@ -953,6 +958,8 @@ public final class CliParser {
      * @return <code>true</code> if non-vulnerable JS should be filtered in the
      * RetireJS Analyzer; otherwise <code>null</code>
      */
+    @SuppressFBWarnings(justification = "Accepting that this is a bad practice - but made more sense in this use case",
+            value = {"NP_BOOLEAN_RETURN_NULL"})
     public Boolean isRetireJsFilterNonVulnerable() {
         return (line != null && line.hasOption(ARGUMENT.RETIREJS_FILTER_NON_VULNERABLE)) ? true : null;
     }
@@ -1140,6 +1147,8 @@ public final class CliParser {
      * @return <code>true</code> if auto-update is allowed; otherwise
      * <code>null</code>
      */
+    @SuppressFBWarnings(justification = "Accepting that this is a bad practice - but made more sense in this use case",
+            value = {"NP_BOOLEAN_RETURN_NULL"})
     public Boolean isAutoUpdate() {
         return (line != null && line.hasOption(ARGUMENT.DISABLE_AUTO_UPDATE)) ? false : null;
     }
@@ -1245,6 +1254,8 @@ public final class CliParser {
      *
      * @return true if the experimental analyzers are enabled; otherwise null
      */
+    @SuppressFBWarnings(justification = "Accepting that this is a bad practice - but made more sense in this use case",
+            value = {"NP_BOOLEAN_RETURN_NULL"})
     public Boolean isExperimentalEnabled() {
         return (line != null && line.hasOption(ARGUMENT.EXPERIMENTAL)) ? true : null;
     }
@@ -1254,6 +1265,8 @@ public final class CliParser {
      *
      * @return true if the retired analyzers are enabled; otherwise null
      */
+    @SuppressFBWarnings(justification = "Accepting that this is a bad practice - but made more sense in this use case",
+            value = {"NP_BOOLEAN_RETURN_NULL"})
     public Boolean isRetiredEnabled() {
         return (line != null && line.hasOption(ARGUMENT.RETIRED)) ? true : null;
     }

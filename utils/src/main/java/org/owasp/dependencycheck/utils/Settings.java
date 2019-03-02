@@ -18,6 +18,7 @@
 package org.owasp.dependencycheck.utils;
 
 import com.google.gson.Gson;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -762,6 +763,7 @@ public final class Settings {
      * @throws java.io.IOException is thrown when there is an exception
      * loading/merging the properties
      */
+    @SuppressFBWarnings(justification = "try with resource will clenaup the resources", value = {"OBL_UNSATISFIED_OBLIGATION"})
     public void mergeProperties(@NotNull final File filePath) throws FileNotFoundException, IOException {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             mergeProperties(fis);
@@ -780,6 +782,7 @@ public final class Settings {
      * @throws java.io.IOException is thrown when there is an exception
      * loading/merging the properties
      */
+    @SuppressFBWarnings(justification = "try with resource will clenaup the resources", value = {"OBL_UNSATISFIED_OBLIGATION"})
     public void mergeProperties(@NotNull final String filePath) throws FileNotFoundException, IOException {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             mergeProperties(fis);

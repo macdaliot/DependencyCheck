@@ -18,6 +18,7 @@
 package org.owasp.dependencycheck;
 
 import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.owasp.dependencycheck.analyzer.AnalysisPhase;
 import org.owasp.dependencycheck.analyzer.Analyzer;
 import org.owasp.dependencycheck.analyzer.AnalyzerService;
@@ -332,6 +333,7 @@ public class Engine implements FileFilter, AutoCloseable {
      *
      * @return the dependencies identified
      */
+    @SuppressFBWarnings(justification = "This is the intended external view of the dependencies", value = {"EI_EXPOSE_REP"})
     public synchronized Dependency[] getDependencies() {
         if (dependenciesExternalView == null) {
             dependenciesExternalView = dependencies.toArray(new Dependency[dependencies.size()]);
@@ -908,12 +910,14 @@ public class Engine implements FileFilter, AutoCloseable {
                 final long updateStart = System.currentTimeMillis();
                 final UpdateService service = new UpdateService(serviceClassLoader);
                 final Iterator<CachedWebDataSource> iterator = service.getDataSources();
+                boolean dbUpdatesMade = false;
                 while (iterator.hasNext()) {
                     final CachedWebDataSource source = iterator.next();
-                    source.update(this);
+                    dbUpdatesMade |= source.update(this);
                 }
-
-                database.compact();
+                if (dbUpdatesMade) {
+                    database.compact();
+                }
                 database.close();
                 database = null;
                 LOGGER.info("Check for updates complete ({} ms)", System.currentTimeMillis() - updateStart);

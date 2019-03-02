@@ -17,6 +17,7 @@
  */
 package org.owasp.dependencycheck.xml.assembly;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -62,6 +63,7 @@ public class GrokParser {
      * @return the assembly data
      * @throws GrokParseException thrown if the XML file cannot be parsed
      */
+    @SuppressFBWarnings(justification = "try with resources will clean up the input stream", value = {"OBL_UNSATISFIED_OBLIGATION"})
     public AssemblyData parse(File file) throws GrokParseException {
         try (FileInputStream fis = new FileInputStream(file)) {
             return parse(fis);

@@ -439,6 +439,7 @@ Copyright (c) 2012 - Jeremy Long
                     <target>1.8</target>
                     <compilerArgs>
                         <arg>-Xlint</arg>
+                        <arg>-XepDisableWarningsInGeneratedCode</arg>
                     </compilerArgs>
                 </configuration>
                 <dependencies>
@@ -717,6 +718,7 @@ Copyright (c) 2012 - Jeremy Long
                 <configuration>
                     <failOnError>false</failOnError>
                     <bottom>Copyright© 2012-19 Jeremy Long. All Rights Reserved.</bottom>
+                    <excludes>${project.build.directory}/generated-sources/java/**/*.java</excludes>
                 </configuration>
                 <reportSets>
                     <reportSet>
@@ -868,6 +870,13 @@ Copyright (c) 2012 - Jeremy Long
                 <groupId>us.springett</groupId>
                 <artifactId>cpe-parser</artifactId>
                 <version>2.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-annotations</artifactId>
+                <version>${spotbugs.maven.plugin.version}</version>
+                <scope>compile</scope>
+                <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>com.vdurmont</groupId>
@@ -1097,7 +1106,14 @@ Copyright (c) 2012 - Jeremy Long
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-            <scope>provided</scope>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-annotations</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>

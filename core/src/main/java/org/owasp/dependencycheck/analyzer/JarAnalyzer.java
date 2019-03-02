@@ -20,6 +20,7 @@ package org.owasp.dependencycheck.analyzer;
 import com.github.packageurl.MalformedPackageURLException;
 import com.github.packageurl.PackageURL;
 import com.github.packageurl.PackageURLBuilder;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -313,9 +314,14 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
      * @return whether or not the given dependency appears to be a macOS
      * meta-data file
      */
+    @SuppressFBWarnings(justification = "If actual file path is not null the path will have elements and getFileName will not be called on a null",
+            value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"})
     private boolean isMacOSMetaDataFile(final Dependency dependency, final Engine engine) {
-        final String fileName = Paths.get(dependency.getActualFilePath()).getFileName().toString();
-        return fileName.startsWith("._") && hasDependencyWithFilename(engine.getDependencies(), fileName.substring(2));
+        if (dependency.getActualFilePath() != null) {
+            final String fileName = Paths.get(dependency.getActualFilePath()).getFileName().toString();
+            return fileName.startsWith("._") && hasDependencyWithFilename(engine.getDependencies(), fileName.substring(2));
+        }
+        return false;
     }
 
     /**
@@ -328,9 +334,12 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
      * @return whether or not the given dependencies contain a dependency with
      * the given filename
      */
+    @SuppressFBWarnings(justification = "If actual file path is not null the path will have elements and getFileName will not be called on a null",
+            value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"})
     private boolean hasDependencyWithFilename(final Dependency[] dependencies, final String fileName) {
         for (final Dependency dependency : dependencies) {
-            if (Paths.get(dependency.getActualFilePath()).getFileName().toString().equalsIgnoreCase(fileName)) {
+            if (dependency.getActualFilePath() != null
+                    && Paths.get(dependency.getActualFilePath()).getFileName().toString().equalsIgnoreCase(fileName)) {
                 return true;
             }
         }
@@ -347,6 +356,7 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
      * @return whether or not the given dependency appears to be a zip file from
      * its first bytes
      */
+    @SuppressFBWarnings(justification = "try with resources will clean up the output stream", value = {"OBL_UNSATISFIED_OBLIGATION"})
     private boolean isZipFile(final Dependency dependency) {
         final byte[] buffer = new byte[4];
         try (final FileInputStream fileInputStream = new FileInputStream(dependency.getActualFilePath())) {
@@ -1175,11 +1185,11 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
                 if (!tested.contains(key)) {
                     tested.add(key);
                     final int pos = StringUtils.indexOfIgnoreCase(value, key);
-                    if ((pos == 0 && (key.length() == value.length() || key.length() < value.length()
-                            && !Character.isLetterOrDigit(value.charAt(key.length()))))
+                    if ((pos == 0 && (key.length() == value.length() || (key.length() < value.length()
+                            && !Character.isLetterOrDigit(value.charAt(key.length())))))
                             || (pos > 0 && !Character.isLetterOrDigit(value.charAt(pos - 1))
-                            && (pos + key.length() == value.length() || key.length() < value.length()
-                            && !Character.isLetterOrDigit(value.charAt(pos + key.length()))))) {
+                            && (pos + key.length() == value.length() || (key.length() < value.length()
+                            && !Character.isLetterOrDigit(value.charAt(pos + key.length())))))) {
                         dep.addEvidence(type, "jar", "package name", key, Confidence.HIGHEST);
                     }
                 }
