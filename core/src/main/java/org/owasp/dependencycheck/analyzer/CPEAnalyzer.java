@@ -701,6 +701,7 @@ public class CPEAnalyzer extends AbstractAnalyzer {
      * @throws UnsupportedEncodingException is thrown if UTF-8 is not supported
      * @throws AnalysisException thrown if the suppression rules failed
      */
+    @SuppressWarnings("StringSplitter")
     protected boolean determineIdentifiers(Dependency dependency, String vendor, String product,
             Confidence currentConfidence) throws UnsupportedEncodingException, AnalysisException {
 
@@ -874,7 +875,7 @@ public class CPEAnalyzer extends AbstractAnalyzer {
             final Confidence bestEvidenceQuality = collected.get(0).getEvidenceConfidence();
             boolean addedNonGuess = false;
             final Confidence prevAddedConfidence = dependency.getVulnerableSoftwareIdentifiers().stream().map(id -> id.getConfidence())
-                    .min(Comparator.comparing(Enum::ordinal))
+                    .min(Comparator.comparing(Confidence::ordinal))
                     .orElse(Confidence.LOW);
 
             for (IdentifierMatch m : collected) {
@@ -1140,7 +1141,7 @@ public class CPEAnalyzer extends AbstractAnalyzer {
             if (this.identifierConfidence != other.identifierConfidence) {
                 return false;
             }
-            return !(this.identifier != other.identifier && (!this.identifier.equals(other.identifier)));
+            return !(this.identifier != other.identifier && !this.identifier.equals(other.identifier));
         }
         //</editor-fold>
 

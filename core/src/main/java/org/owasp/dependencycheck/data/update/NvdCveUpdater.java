@@ -17,6 +17,7 @@
  */
 package org.owasp.dependencycheck.data.update;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.net.MalformedURLException;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -100,16 +101,18 @@ public class NvdCveUpdater implements CachedWebDataSource {
      * time. This method may sleep upto 5 minutes.
      *
      * @param engine a reference to the dependency-check engine
+     * @return whether or not an update was made to the CveDB
      * @throws UpdateException is thrown if there is an error updating the
      * database
      */
     @Override
-    public synchronized void update(Engine engine) throws UpdateException {
+    public synchronized boolean update(Engine engine) throws UpdateException {
         this.settings = engine.getSettings();
         this.cveDb = engine.getDatabase();
         if (isUpdateConfiguredFalse()) {
-            return;
+            return false;
         }
+        boolean updatesMade = false;
         try {
             dbProperties = cveDb.getDatabaseProperties();
             if (checkUpdate()) {
@@ -117,6 +120,7 @@ public class NvdCveUpdater implements CachedWebDataSource {
                 final UpdateableNvdCve updateable = getUpdatesNeeded();
                 if (updateable.isUpdateNeeded()) {
                     performUpdate(updateable);
+                    updatesMade = true;
                 }
                 dbProperties.save(DatabaseProperties.LAST_CHECKED, Long.toString(System.currentTimeMillis()));
             }
@@ -138,6 +142,7 @@ public class NvdCveUpdater implements CachedWebDataSource {
         } finally {
             shutdownExecutorServices();
         }
+        return updatesMade;
     }
 
     /**
@@ -233,6 +238,7 @@ public class NvdCveUpdater implements CachedWebDataSource {
      * @throws UpdateException is thrown if there is an error updating the
      * database
      */
+    @SuppressWarnings("FutureReturnValueIgnored")
     private void performUpdate(UpdateableNvdCve updateable) throws UpdateException {
         int maxUpdates = 0;
         for (NvdCveInfo cve : updateable) {
@@ -269,7 +275,7 @@ public class NvdCveUpdater implements CachedWebDataSource {
             final Future<ProcessTask> task;
             try {
                 task = future.get();
-                final ProcessTask current = (ProcessTask) task.get();
+                final ProcessTask current = task.get();
                 processFutures.add(task);
             } catch (InterruptedException ex) {
                 LOGGER.debug("Thread was interrupted during download", ex);
@@ -302,7 +308,7 @@ public class NvdCveUpdater implements CachedWebDataSource {
             final Future<ProcessTask> task;
             try {
                 task = modified.get();
-                final ProcessTask last = (ProcessTask) task.get();
+                final ProcessTask last = task.get();
                 if (last.getException() != null) {
                     throw last.getException();
                 }
@@ -456,6 +462,7 @@ public class NvdCveUpdater implements CachedWebDataSource {
      * @throws DownloadFailedException thrown if there is an error retrieving
      * the time stamps from the NVD CVE
      */
+    @SuppressFBWarnings(justification = "This is only called from within a synchronized method", value = {"IS2_INCONSISTENT_SYNC"})
     private Map<String, Long> retrieveLastModifiedDates(int startYear, int endYear)
             throws MalformedURLException, DownloadFailedException {
 

@@ -18,6 +18,7 @@
 package org.owasp.dependencycheck.data.nvdcve;
 //CSOFF: AvoidStarImport
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.owasp.dependencycheck.dependency.Vulnerability;
 import org.owasp.dependencycheck.dependency.VulnerableSoftware;
@@ -140,7 +141,7 @@ public final class CveDB implements AutoCloseable {
             return null;
         }
         int idx = StringUtils.indexOfIgnoreCase(description, ".php");
-        if (idx > 0 && (idx + 4 == description.length() || !Character.isLetterOrDigit(description.charAt(idx + 4)))
+        if ((idx > 0 && (idx + 4 == description.length() || !Character.isLetterOrDigit(description.charAt(idx + 4))))
                 || StringUtils.containsIgnoreCase(description, "wordpress")
                 || StringUtils.containsIgnoreCase(description, "drupal")
                 || StringUtils.containsIgnoreCase(description, "joomla")
@@ -183,7 +184,7 @@ public final class CveDB implements AutoCloseable {
         }
 
         idx = StringUtils.indexOfIgnoreCase(description, ".py");
-        if (idx > 0 && (idx + 3 == description.length() || !Character.isLetterOrDigit(description.charAt(idx + 3)))
+        if ((idx > 0 && (idx + 3 == description.length() || !Character.isLetterOrDigit(description.charAt(idx + 3))))
                 || StringUtils.containsIgnoreCase(description, "django")) {
             return PythonPackageAnalyzer.DEPENDENCY_ECOSYSTEM;
         }
@@ -603,7 +604,7 @@ public final class CveDB implements AutoCloseable {
                         .swEdition(rs.getString(8))
                         .targetSw(rs.getString(9))
                         .targetHw(rs.getString(10))
-                        .other((rs.getString(11))).build();
+                        .other(rs.getString(11)).build();
                 final CpePlus plus = new CpePlus(entry, rs.getString(12));
                 cpe.add(plus);
             }
@@ -943,6 +944,7 @@ public final class CveDB implements AutoCloseable {
      * @param cveId the CVE ID
      * @return the vulnerability ID
      */
+    @SuppressFBWarnings(justification = "Try with resources will cleanup the resources", value = {"OBL_UNSATISFIED_OBLIGATION"})
     private synchronized int updateVulnerabilityGetVulnerabilityId(String cveId) {
         int vulnerabilityId = 0;
         try (PreparedStatement selectVulnerabilityId = prepareStatement(SELECT_VULNERABILITY_ID);
@@ -1504,7 +1506,7 @@ public final class CveDB implements AutoCloseable {
      * If the database is using an H2 file based database calling
      * <code>compaxt()</code> will de-fragment and compact the database.
      */
-    public void compact() {
+    public synchronized void compact() {
         if (ConnectionFactory.isH2Connection(settings)) {
             final long start = System.currentTimeMillis();
             try (CallableStatement psCompaxt = connection.prepareCall("SHUTDOWN DEFRAG")) {

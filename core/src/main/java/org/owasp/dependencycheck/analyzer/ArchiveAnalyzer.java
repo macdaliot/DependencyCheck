@@ -273,7 +273,7 @@ public class ArchiveAnalyzer extends AbstractFileTypeAnalyzer {
                         extractAndAnalyze(d, engine, scanDepth + 1);
                     }
                 } else {
-                    dependencySet.stream().filter((sub) -> (sub.getFilePath().startsWith(tmpDir.getAbsolutePath()))).forEach((sub) -> {
+                    dependencySet.stream().filter((sub) -> sub.getFilePath().startsWith(tmpDir.getAbsolutePath())).forEach((sub) -> {
                         final String displayPath = String.format("%s%s",
                                 dependency.getFilePath(),
                                 sub.getActualFilePath().substring(tmpDir.getAbsolutePath().length()));
@@ -325,7 +325,7 @@ public class ArchiveAnalyzer extends AbstractFileTypeAnalyzer {
                             d.setFilePath(dependency.getFilePath());
                             d.setDisplayFileName(dependency.getFileName());
                         } else {
-                            d.getRelatedDependencies().stream().filter((rel) -> (rel.getActualFile().equals(tmpLoc))).forEach((rel) -> {
+                            d.getRelatedDependencies().stream().filter((rel) -> rel.getActualFile().equals(tmpLoc)).forEach((rel) -> {
                                 rel.setFilePath(dependency.getFilePath());
                                 rel.setDisplayFileName(dependency.getFileName());
                             });

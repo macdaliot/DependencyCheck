@@ -20,7 +20,7 @@ package org.owasp.dependencycheck.analyzer;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import org.apache.commons.io.IOUtils;
@@ -35,24 +35,16 @@ import org.owasp.dependencycheck.utils.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.concurrent.ThreadSafe;
-import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.dependency.EvidenceType;
 import org.owasp.dependencycheck.dependency.naming.GenericIdentifier;
 import org.owasp.dependencycheck.utils.ExtractionException;
 import org.owasp.dependencycheck.utils.ExtractionUtil;
-import org.owasp.dependencycheck.utils.XmlUtils;
 import org.owasp.dependencycheck.xml.assembly.AssemblyData;
 import org.owasp.dependencycheck.xml.assembly.GrokParseException;
 import org.owasp.dependencycheck.xml.assembly.GrokParser;
@@ -214,7 +206,7 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
             }
             if (!StringUtils.isEmpty(data.getFileVersion())) {
                 dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "FileVersion", data.getFileVersion(), Confidence.HIGHEST);
-                if ((data.getFileVersion()).equals(data.getProductVersion()) || (data.getFileVersion()).startsWith(data.getProductVersion())) {
+                if (data.getFileVersion().equals(data.getProductVersion()) || data.getFileVersion().startsWith(data.getProductVersion())) {
                     dependency.setVersion(data.getFileVersion());
                 }
             }
@@ -285,9 +277,12 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
     @Override
     public void prepareFileTypeAnalyzer(Engine engine) throws InitializationException {
         final File location;
-        try {
+        try (InputStream in = FileUtils.getResourceAsStream("GrokAssembly.zip")) {
+            if (in == null) {
+                throw new InitializationException("Unable to extract GrokAssembly.dll - file not found");
+            }
             location = FileUtils.createTempDirectory(getSettings().getTempDirectory());
-            ExtractionUtil.extractFiles(FileUtils.getResourceAsStream("GrokAssembly.zip"), location);
+            ExtractionUtil.extractFiles(in, location);
         } catch (ExtractionException ex) {
             throw new InitializationException("Unable to extract GrokAssembly.dll", ex);
         } catch (IOException ex) {
@@ -406,10 +401,12 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                 return true;
             }
             final byte[] version = new byte[50];
-            proc.getInputStream().read(version);
-            final String v = new String(version, UTF_8);
-            if (v.length() > 0) {
-                return true;
+            final int read = proc.getInputStream().read(version);
+            if (read > 0) {
+                final String v = new String(version, UTF_8);
+                if (v.length() > 0) {
+                    return true;
+                }
             }
         } catch (IOException | InterruptedException ex) {
             LOGGER.debug("Path search failed for dotnet", ex);
@@ -434,11 +431,11 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
         }
         for (String key : packages) {
             final int pos = StringUtils.indexOfIgnoreCase(value, key);
-            if ((pos == 0 && (key.length() == value.length() || key.length() < value.length()
-                    && !Character.isLetterOrDigit(value.charAt(key.length()))))
+            if ((pos == 0 && (key.length() == value.length() || (key.length() < value.length()
+                    && !Character.isLetterOrDigit(value.charAt(key.length())))))
                     || (pos > 0 && !Character.isLetterOrDigit(value.charAt(pos - 1))
-                    && (pos + key.length() == value.length() || key.length() < value.length()
-                    && !Character.isLetterOrDigit(value.charAt(pos + key.length()))))) {
+                    && (pos + key.length() == value.length() || (key.length() < value.length()
+                    && !Character.isLetterOrDigit(value.charAt(pos + key.length())))))) {
                 dep.addEvidence(type, "dll", "namespace", key, Confidence.HIGHEST);
             }
 
