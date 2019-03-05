@@ -189,7 +189,7 @@ public class CPEAnalyzer extends AbstractAnalyzer {
         if (tmp == null) {
             skipEcosystems = new ArrayList<>();
         } else {
-            LOGGER.info("Skipping CPE Analysis for {}", StringUtils.join(tmp, ","));
+            LOGGER.debug("Skipping CPE Analysis for {}", StringUtils.join(tmp, ","));
             skipEcosystems = Arrays.asList(tmp);
         }
 
@@ -942,9 +942,10 @@ public class CPEAnalyzer extends AbstractAnalyzer {
                     case JarAnalyzer.DEPENDENCY_ECOSYSTEM:
                     case "java":
                         return ecosystem.equals(JarAnalyzer.DEPENDENCY_ECOSYSTEM);
+                    case AssemblyAnalyzer.DEPENDENCY_ECOSYSTEM:
                     case NugetconfAnalyzer.DEPENDENCY_ECOSYSTEM:
                     case "asp.net":
-                        return ecosystem.equals(NugetconfAnalyzer.DEPENDENCY_ECOSYSTEM);
+                        return ecosystem.equals(NugetconfAnalyzer.DEPENDENCY_ECOSYSTEM) || ecosystem.equals(AssemblyAnalyzer.DEPENDENCY_ECOSYSTEM);
                     case RetireJsAnalyzer.DEPENDENCY_ECOSYSTEM:
                     case "jquery":
                         return ecosystem.equals(RetireJsAnalyzer.DEPENDENCY_ECOSYSTEM);

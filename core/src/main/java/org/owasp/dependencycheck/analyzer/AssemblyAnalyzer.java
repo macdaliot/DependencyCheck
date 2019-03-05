@@ -17,6 +17,7 @@
  */
 package org.owasp.dependencycheck.analyzer;
 
+import com.github.packageurl.MalformedPackageURLException;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -43,6 +44,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.dependency.EvidenceType;
 import org.owasp.dependencycheck.dependency.naming.GenericIdentifier;
+import org.owasp.dependencycheck.dependency.naming.PurlIdentifier;
+import org.owasp.dependencycheck.utils.DependencyVersion;
+import org.owasp.dependencycheck.utils.DependencyVersionUtil;
 import org.owasp.dependencycheck.utils.ExtractionException;
 import org.owasp.dependencycheck.utils.ExtractionUtil;
 import org.owasp.dependencycheck.xml.assembly.AssemblyData;
@@ -71,6 +75,11 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
      * The analysis phase
      */
     private static final AnalysisPhase ANALYSIS_PHASE = AnalysisPhase.INFORMATION_COLLECTION;
+    /**
+     * A descriptor for the type of dependencies processed or added by this
+     * analyzer.
+     */
+    public static final String DEPENDENCY_ECOSYSTEM = "dotnet";
     /**
      * The list of supported extensions
      */
@@ -206,15 +215,55 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
             }
             if (!StringUtils.isEmpty(data.getFileVersion())) {
                 dependency.addEvidence(EvidenceType.VERSION, "grokassembly", "FileVersion", data.getFileVersion(), Confidence.HIGHEST);
-                if (data.getFileVersion().equals(data.getProductVersion()) || data.getFileVersion().startsWith(data.getProductVersion())) {
-                    dependency.setVersion(data.getFileVersion());
-                }
             }
+
+            if (data.getFileVersion() != null && data.getProductVersion() != null) {
+                int max = data.getFileVersion().length() > data.getProductVersion().length()
+                        ? data.getProductVersion().length() : data.getFileVersion().length();
+                int pos;
+                for (pos = 0; pos < max; pos++) {
+                    if (data.getFileVersion().charAt(pos) != data.getProductVersion().charAt(pos)) {
+                        break;
+                    }
+                }
+                DependencyVersion fileVersion = DependencyVersionUtil.parseVersion(data.getFileVersion(), true);
+                DependencyVersion productVersion = DependencyVersionUtil.parseVersion(data.getProductVersion(), true);
+                if (pos > 0) {
+                    DependencyVersion matchingVersion = DependencyVersionUtil.parseVersion(data.getFileVersion().substring(0, pos), true);
+                    if (fileVersion.toString().length() == data.getFileVersion().length()) {
+                        if (matchingVersion != null && matchingVersion.getVersionParts().size() > 2) {
+                            dependency.addEvidence(EvidenceType.VERSION, "AssemblyAnalyzer", "FilteredVersion", matchingVersion.toString(), Confidence.HIGHEST);
+                            dependency.setVersion(matchingVersion.toString());
+                        }
+                    }
+                }
+                if (dependency.getVersion() == null) {
+                    if (data.getFileVersion().length() >= data.getProductVersion().length()) {
+                        if (fileVersion.toString().length() == data.getFileVersion().length()) {
+                            dependency.setVersion(fileVersion.toString());
+                        } else if (productVersion.toString().length() == data.getProductVersion().length()) {
+                            dependency.setVersion(productVersion.toString());
+                        }
+                    } else {
+                        if (productVersion.toString().length() == data.getProductVersion().length()) {
+                            dependency.setVersion(productVersion.toString());
+                        } else if (fileVersion.toString().length() == data.getFileVersion().length()) {
+                            dependency.setVersion(fileVersion.toString());
+                        }
+                    }
+                }
+            } else if (data.getFileVersion() != null) {
+                DependencyVersion version = DependencyVersionUtil.parseVersion(data.getFileVersion(), true);
+                dependency.setVersion(version.toString());
+            } else if (data.getProductVersion() != null) {
+                DependencyVersion version = DependencyVersionUtil.parseVersion(data.getProductVersion(), true);
+                dependency.setVersion(version.toString());
+            }
+
             if (!StringUtils.isEmpty(data.getCompanyName())) {
                 dependency.addEvidence(EvidenceType.VENDOR, "grokassembly", "CompanyName", data.getCompanyName(), Confidence.HIGHEST);
                 addMatchingValues(data.getNamespaces(), data.getCompanyName(), dependency, EvidenceType.VENDOR);
             }
-
             if (!StringUtils.isEmpty(data.getProductName())) {
                 dependency.addEvidence(EvidenceType.PRODUCT, "grokassembly", "ProductName", data.getProductName(), Confidence.HIGHEST);
                 addMatchingValues(data.getNamespaces(), data.getProductName(), dependency, EvidenceType.PRODUCT);
@@ -253,10 +302,16 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                 }
             }
             if (dependency.getName() != null && dependency.getVersion() != null) {
-                dependency.addSoftwareIdentifier(new GenericIdentifier(
-                        String.format("%s@%s", dependency.getName(), dependency.getVersion()),
-                        Confidence.MEDIUM));
+                try {
+                    dependency.addSoftwareIdentifier(new PurlIdentifier("generic", dependency.getName(), dependency.getVersion(), Confidence.MEDIUM));
+                } catch (MalformedPackageURLException ex) {
+                    LOGGER.debug("Unable to create Package URL Identifier for " + dependency.getName(), ex);
+                    dependency.addSoftwareIdentifier(new GenericIdentifier(
+                            String.format("%s@%s", dependency.getName(), dependency.getVersion()),
+                            Confidence.MEDIUM));
+                }
             }
+            dependency.setEcosystem(DEPENDENCY_ECOSYSTEM);
         } catch (GrokParseException saxe) {
             LOGGER.error("----------------------------------------------------");
             LOGGER.error("Failed to read the Assembly Analyzer results.");
