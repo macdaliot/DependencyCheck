@@ -916,7 +916,7 @@ public class Engine implements FileFilter, AutoCloseable {
                     dbUpdatesMade |= source.update(this);
                 }
                 if (dbUpdatesMade) {
-                    database.compact();
+                    database.defrag();
                 }
                 database.close();
                 database = null;

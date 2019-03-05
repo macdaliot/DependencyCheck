@@ -7,6 +7,7 @@ Please see the [dependency-check google group](https://groups.google.com/forum/#
 ### Breaking Changes
 
 - [dotnet core](https://dotnet.microsoft.com/download/dotnet-core/2.2) must be installed to analyze .NET assemblies.
+- The retire.js analyzer is no longer considered experimental and is enabled by default.
 
 
 ## [Version 5.0.0-M1](https://github.com/jeremylong/DependencyCheck/releases/tag/v5.0.0-M1) (2019-02-17)

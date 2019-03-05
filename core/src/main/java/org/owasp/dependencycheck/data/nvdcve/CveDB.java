@@ -53,13 +53,13 @@ import org.owasp.dependencycheck.analyzer.exception.LambdaExceptionWrapper;
 import org.owasp.dependencycheck.analyzer.exception.UnexpectedAnalysisException;
 import org.owasp.dependencycheck.data.nvd.json.BaseMetricV2;
 import org.owasp.dependencycheck.data.nvd.json.BaseMetricV3;
-import org.owasp.dependencycheck.data.nvd.json.CVEItem;
-import org.owasp.dependencycheck.data.nvd.json.CpeMatch;
 import org.owasp.dependencycheck.data.nvd.json.CpeMatchStreamCollector;
-import org.owasp.dependencycheck.data.nvd.json.Description;
+import org.owasp.dependencycheck.data.nvd.json.DefCpeMatch;
+import org.owasp.dependencycheck.data.nvd.json.DefCveItem;
+import org.owasp.dependencycheck.data.nvd.json.LangString;
 import org.owasp.dependencycheck.data.nvd.json.NodeFlatteningCollector;
 import org.owasp.dependencycheck.data.nvd.json.ProblemtypeDatum;
-import org.owasp.dependencycheck.data.nvd.json.ReferenceDatum;
+import org.owasp.dependencycheck.data.nvd.json.Reference;
 import static org.owasp.dependencycheck.data.nvdcve.CveDB.PreparedStatementCveDb.*;
 import org.owasp.dependencycheck.data.update.cpe.CpePlus;
 import org.owasp.dependencycheck.dependency.CvssV2;
@@ -894,9 +894,9 @@ public final class CveDB implements AutoCloseable {
      * database
      * @throws DatabaseException is thrown if the database
      */
-    public void updateVulnerability(CVEItem cve) {
+    public void updateVulnerability(DefCveItem cve) {
         clearCache();
-        final String cveId = cve.getCve().getCVEDataMeta().getID();
+        final String cveId = cve.getCve().getCVEDataMeta().getId();
         try {
             int vulnerabilityId = updateVulnerabilityGetVulnerabilityId(cveId);
 
@@ -980,7 +980,7 @@ public final class CveDB implements AutoCloseable {
      * @param description the description of the CVE entry
      * @return the vulnerability ID
      */
-    private synchronized int updateVulnerabilityInsertVulnerability(CVEItem cve, String description) {
+    private synchronized int updateVulnerabilityInsertVulnerability(DefCveItem cve, String description) {
         int vulnerabilityId = 0;
         try (PreparedStatement insertVulnerability = prepareStatement(INSERT_VULNERABILITY)) {
             //cve, description, cvssV2Score, cvssV2AccessVector, cvssV2AccessComplexity, cvssV2Authentication,
@@ -988,7 +988,7 @@ public final class CveDB implements AutoCloseable {
             //cvssV3AttackVector, cvssV3AttackComplexity, cvssV3PrivilegesRequired, cvssV3UserInteraction,
             //cvssV3Scope, cvssV3ConfidentialityImpact, cvssV3IntegrityImpact, cvssV3AvailabilityImpact,
             //cvssV3BaseScore, cvssV3BaseSeverity
-            insertVulnerability.setString(1, cve.getCve().getCVEDataMeta().getID());
+            insertVulnerability.setString(1, cve.getCve().getCVEDataMeta().getId());
             insertVulnerability.setString(2, description);
             if (cve.getImpact().getBaseMetricV2() != null) {
                 final BaseMetricV2 cvssv2 = cve.getImpact().getBaseMetricV2();
@@ -1039,7 +1039,7 @@ public final class CveDB implements AutoCloseable {
                 rs.next();
                 vulnerabilityId = rs.getInt(1);
             } catch (SQLException ex) {
-                final String msg = String.format("Unable to retrieve id for new vulnerability for '%s'", cve.getCve().getCVEDataMeta().getID());
+                final String msg = String.format("Unable to retrieve id for new vulnerability for '%s'", cve.getCve().getCVEDataMeta().getId());
                 throw new DatabaseException(msg, ex);
             }
         } catch (SQLException ex) {
@@ -1056,7 +1056,7 @@ public final class CveDB implements AutoCloseable {
      * @param cve the CVE data
      * @param description the description of the CVE entry
      */
-    private synchronized void updateVulnerabilityUpdateVulnerability(int vulnerabilityId, CVEItem cve, String description) {
+    private synchronized void updateVulnerabilityUpdateVulnerability(int vulnerabilityId, DefCveItem cve, String description) {
         try (PreparedStatement updateVulnerability = prepareStatement(UPDATE_VULNERABILITY)) {
             //description=?, cvssV2Score=?, cvssV2AccessVector=?, cvssV2AccessComplexity=?, cvssV2Authentication=?, cvssV2ConfidentialityImpact=?,
             //cvssV2IntegrityImpact=?, cvssV2AvailabilityImpact=?, cvssV2Severity=?, cvssV3AttackVector=?, cvssV3AttackComplexity=?,
@@ -1126,12 +1126,12 @@ public final class CveDB implements AutoCloseable {
      * @param cve the CVE entry that contains the CWE entries to insert
      * @throws SQLException thrown if there is an error inserting the data
      */
-    private synchronized void updateVulnerabilityInsertCwe(int vulnerabilityId, CVEItem cve) throws SQLException {
+    private synchronized void updateVulnerabilityInsertCwe(int vulnerabilityId, DefCveItem cve) throws SQLException {
         try (PreparedStatement insertCWE = prepareStatement(INSERT_CWE)) {
             insertCWE.setInt(1, vulnerabilityId);
 
             for (ProblemtypeDatum datum : cve.getCve().getProblemtype().getProblemtypeData()) {
-                for (Description desc : datum.getDescription()) {
+                for (LangString desc : datum.getDescription()) {
                     if ("en".equals(desc.getLang())) {
                         insertCWE.setString(2, desc.getValue());
                         insertCWE.execute();
@@ -1258,11 +1258,11 @@ public final class CveDB implements AutoCloseable {
      * otherwise <code>null</code>
      * @throws SQLException thrown if there is an error inserting the data
      */
-    private synchronized String updateVulnerabilityInsertReferences(int vulnerabilityId, CVEItem cve, String baseEcosystem) throws SQLException {
+    private synchronized String updateVulnerabilityInsertReferences(int vulnerabilityId, DefCveItem cve, String baseEcosystem) throws SQLException {
         String ecosystem = baseEcosystem;
         try (PreparedStatement insertReference = prepareStatement(INSERT_REFERENCE)) {
             int countReferences = 0;
-            for (ReferenceDatum r : cve.getCve().getReferences().getReferenceData()) {
+            for (Reference r : cve.getCve().getReferences().getReferenceData()) {
                 if (ecosystem == null) {
                     if (r.getUrl().contains("elixir-security-advisories")) {
                         ecosystem = "elixir";
@@ -1314,14 +1314,14 @@ public final class CveDB implements AutoCloseable {
      * @return the list of vulnerable software
      * @throws CpeValidationException if an invalid CPE is present
      */
-    private List<VulnerableSoftware> parseCpes(CVEItem cve) throws CpeValidationException {
+    private List<VulnerableSoftware> parseCpes(DefCveItem cve) throws CpeValidationException {
         final List<VulnerableSoftware> software = new ArrayList<>();
-        final List<CpeMatch> cpeEntries = cve.getConfigurations().getNodes().stream()
+        final List<DefCpeMatch> cpeEntries = cve.getConfigurations().getNodes().stream()
                 .collect(new NodeFlatteningCollector())
                 .collect(new CpeMatchStreamCollector())
                 .filter(predicate -> predicate.getCpe23Uri().startsWith(cpeStartsWithFilter))
                 //this single CPE entry causes nearly 100% FP - so filtering it at the source.
-                .filter(entry -> !("CVE-2009-0754".equals(cve.getCve().getCVEDataMeta().getID())
+                .filter(entry -> !("CVE-2009-0754".equals(cve.getCve().getCVEDataMeta().getId())
                 && "cpe:2.3:a:apache:apache:*:*:*:*:*:*:*:*".equals(entry.getCpe23Uri())))
                 .collect(Collectors.toList());
         final VulnerableSoftwareBuilder builder = new VulnerableSoftwareBuilder();
@@ -1329,7 +1329,7 @@ public final class CveDB implements AutoCloseable {
         try {
             cpeEntries.stream()
                     .forEach(entry -> {
-                        builder.cpe(parseCpe(entry, cve.getCve().getCVEDataMeta().getID()))
+                        builder.cpe(parseCpe(entry, cve.getCve().getCVEDataMeta().getId()))
                                 .versionEndExcluding(entry.getVersionEndExcluding())
                                 .versionStartExcluding(entry.getVersionStartExcluding())
                                 .versionEndIncluding(entry.getVersionEndIncluding())
@@ -1358,7 +1358,7 @@ public final class CveDB implements AutoCloseable {
      * @throws DatabaseException thrown if there is an error converting the
      * CpeMatch into a CPE object
      */
-    private Cpe parseCpe(CpeMatch cpe, String cveId) throws DatabaseException {
+    private Cpe parseCpe(DefCpeMatch cpe, String cveId) throws DatabaseException {
         Cpe parsedCpe;
         try {
             //the replace is a hack as the NVD does not properly escape backslashes in their JSON
@@ -1494,8 +1494,8 @@ public final class CveDB implements AutoCloseable {
                 psOrphans.executeUpdate();
             }
             final long millis = System.currentTimeMillis() - start;
-            final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
-            LOGGER.info("End database maintenance ({} seconds)", seconds);
+            //final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
+            LOGGER.info("End database maintenance ({} ms)", millis);
         } catch (SQLException ex) {
             LOGGER.error("An unexpected SQL Exception occurred; please see the verbose log for more details.");
             LOGGER.debug("", ex);
@@ -1504,18 +1504,18 @@ public final class CveDB implements AutoCloseable {
 
     /**
      * If the database is using an H2 file based database calling
-     * <code>compaxt()</code> will de-fragment and compact the database.
+     * <code>defrag()</code> will de-fragment the database.
      */
-    public synchronized void compact() {
+    public synchronized void defrag() {
         if (ConnectionFactory.isH2Connection(settings)) {
             final long start = System.currentTimeMillis();
             try (CallableStatement psCompaxt = connection.prepareCall("SHUTDOWN DEFRAG")) {
                 if (psCompaxt != null) {
-                    LOGGER.info("Begin database compaction");
+                    LOGGER.info("Begin database defrag");
                     psCompaxt.execute();
                     final long millis = System.currentTimeMillis() - start;
-                    final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
-                    LOGGER.info("Begin database compaction ({} seconds)", seconds);
+                    //final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
+                    LOGGER.info("End database defrag ({} ms)", millis);
                 }
             } catch (SQLException ex) {
                 LOGGER.error("An unexpected SQL Exception occurred compacting the database; please see the verbose log for more details.");

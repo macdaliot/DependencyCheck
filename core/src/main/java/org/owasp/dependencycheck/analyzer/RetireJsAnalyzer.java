@@ -63,7 +63,6 @@ import org.owasp.dependencycheck.utils.search.FileContentSearch;
  * @author Steve Springett
  */
 @ThreadSafe
-@Experimental
 public class RetireJsAnalyzer extends AbstractFileTypeAnalyzer {
 
     /**
