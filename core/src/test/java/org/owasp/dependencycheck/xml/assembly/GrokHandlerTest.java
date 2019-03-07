@@ -25,7 +25,6 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import javax.xml.parsers.SAXParser;
 import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
 import org.owasp.dependencycheck.BaseTest;
 import org.owasp.dependencycheck.utils.XmlUtils;
