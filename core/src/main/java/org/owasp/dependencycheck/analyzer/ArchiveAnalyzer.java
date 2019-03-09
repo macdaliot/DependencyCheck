@@ -92,7 +92,7 @@ public class ArchiveAnalyzer extends AbstractFileTypeAnalyzer {
     /**
      * The set of things we can handle with Zip methods
      */
-    private static final Set<String> KNOWN_ZIP_EXT = newHashSet("zip", "ear", "war", "jar", "sar", "apk", "nupkg");
+    private static final Set<String> KNOWN_ZIP_EXT = newHashSet("zip", "ear", "war", "jar", "sar", "apk", "nupkg", "aar");
     /**
      * The set of file extensions supported by this analyzer. Note for
      * developers, any additions to this list will need to be explicitly handled

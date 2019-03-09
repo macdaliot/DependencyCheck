@@ -183,7 +183,7 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
     /**
      * The set of file extensions supported by this analyzer.
      */
-    private static final String[] EXTENSIONS = {"jar", "war"};
+    private static final String[] EXTENSIONS = {"jar", "war", "aar"};
 
     /**
      * The file filter used to determine which files this analyzer supports.
