@@ -18,8 +18,6 @@
 package org.owasp.dependencycheck.xml.assembly;
 
 import javax.annotation.concurrent.NotThreadSafe;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -31,11 +29,6 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 @NotThreadSafe
 public class GrokHandler extends DefaultHandler {
-
-    /**
-     * The logger.
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(GrokHandler.class);
 
     /**
      * An XML node name.

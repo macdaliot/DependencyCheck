@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.document.Document;
@@ -1129,20 +1130,15 @@ public class CPEAnalyzer extends AbstractAnalyzer {
          */
         @Override
         public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (!(obj instanceof IdentifierMatch)) {
+            if (obj == null || !(obj instanceof IdentifierMatch)) {
                 return false;
             }
             final IdentifierMatch other = (IdentifierMatch) obj;
-            if (this.identifier.getConfidence() != other.identifier.getConfidence()) {
-                return false;
-            }
-            if (this.identifierConfidence != other.identifierConfidence) {
-                return false;
-            }
-            return !(this.identifier != other.identifier && !this.identifier.equals(other.identifier));
+            return new EqualsBuilder()
+                    .appendSuper(super.equals(obj))
+                    .append(identifierConfidence, other.identifierConfidence)
+                    .append(identifier, other.identifier)
+                    .build();
         }
         //</editor-fold>
 

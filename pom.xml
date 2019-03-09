@@ -133,7 +133,6 @@ Copyright (c) 2012 - Jeremy Long
         <!-- Note that Maven will use classes from the distro, ignoring declared dependencies for Maven core... -->
         <maven.api.version>3.1.0</maven.api.version>
         <reporting.checkstyle-plugin.version>3.0.0</reporting.checkstyle-plugin.version>
-        <reporting.pmd-plugin.version>3.11.0</reporting.pmd-plugin.version>
         <doxia-module-markdown.version>1.8</doxia-module-markdown.version>
         <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
         <maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
@@ -440,6 +439,7 @@ Copyright (c) 2012 - Jeremy Long
                     <compilerArgs>
                         <arg>-Xlint</arg>
                         <arg>-XepDisableWarningsInGeneratedCode</arg>
+                        <arg>-XepExcludedPaths:.*/generated-sources/.*</arg>
                     </compilerArgs>
                 </configuration>
                 <dependencies>
@@ -750,23 +750,6 @@ Copyright (c) 2012 - Jeremy Long
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>${reporting.pmd-plugin.version}</version>
-                <configuration>
-                    <targetJdk>1.8</targetJdk>
-                    <linkXRef>true</linkXRef>
-                    <sourceEncoding>utf-8</sourceEncoding>
-                    <excludes>
-                        <exclude>**/generated/*.java</exclude>
-                        <exclude>**/HelpMojo.java</exclude>
-                    </excludes>
-                    <rulesets>
-                        <ruleset>${odc.config}/dcrules.xml</ruleset>
-                    </rulesets>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
                 <version>${maven-project-info-reports-plugin.version}</version>
                 <reportSets>
@@ -819,6 +802,9 @@ Copyright (c) 2012 - Jeremy Long
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>${spotbugs.maven.plugin.version}</version>
+                <configuration>
+                    <excludeFilterFile>${odc.config}/spotbugs_excludes.xml</excludeFilterFile>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

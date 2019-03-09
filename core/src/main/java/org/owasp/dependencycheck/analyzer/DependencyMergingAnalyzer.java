@@ -185,7 +185,7 @@ public class DependencyMergingAnalyzer extends AbstractDependencyComparingAnalyz
     /**
      * Ruby gems installed by "bundle install" can have zero or more *.gemspec
      * files, all of which have the same packagePath and should be grouped. If
-     * one of these gemspec is from <parent>/specifications/*.gemspec, because
+     * one of these gemspec is from &lt;parent&gt;/specifications/*.gemspec, because
      * it is a stub with fully resolved gem meta-data created by Ruby bundler,
      * this dependency should be the main one. Otherwise, use dependency2 as
      * main.

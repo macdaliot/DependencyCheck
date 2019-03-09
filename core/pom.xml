@@ -109,7 +109,6 @@ Copyright (c) 2012 Jeremy Long. All Rights Reserved.
                     <includeGetters>true</includeGetters>
                     <annotationStyle>gson</annotationStyle>
                     <targetPackage>org.owasp.dependencycheck.data.nvd.json</targetPackage>
-                    <useCommonsLang3>true</useCommonsLang3>
                 </configuration>
                 <executions>
                     <execution>

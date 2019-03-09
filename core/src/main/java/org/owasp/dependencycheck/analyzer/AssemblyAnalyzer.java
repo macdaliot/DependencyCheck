@@ -35,7 +35,6 @@ import org.owasp.dependencycheck.utils.FileUtils;
 import org.owasp.dependencycheck.utils.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -143,7 +142,6 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
         final List<String> args = new ArrayList<>(baseArgumentList);
         args.add(dependency.getActualFilePath());
         final ProcessBuilder pb = new ProcessBuilder(args);
-        final Document doc;
         try {
             final Process proc = pb.start();
             final GrokParser parser = new GrokParser();
@@ -218,7 +216,7 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
             }
 
             if (data.getFileVersion() != null && data.getProductVersion() != null) {
-                int max = data.getFileVersion().length() > data.getProductVersion().length()
+                final int max = data.getFileVersion().length() > data.getProductVersion().length()
                         ? data.getProductVersion().length() : data.getFileVersion().length();
                 int pos;
                 for (pos = 0; pos < max; pos++) {
@@ -226,13 +224,14 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                         break;
                     }
                 }
-                DependencyVersion fileVersion = DependencyVersionUtil.parseVersion(data.getFileVersion(), true);
-                DependencyVersion productVersion = DependencyVersionUtil.parseVersion(data.getProductVersion(), true);
+                final DependencyVersion fileVersion = DependencyVersionUtil.parseVersion(data.getFileVersion(), true);
+                final DependencyVersion productVersion = DependencyVersionUtil.parseVersion(data.getProductVersion(), true);
                 if (pos > 0) {
-                    DependencyVersion matchingVersion = DependencyVersionUtil.parseVersion(data.getFileVersion().substring(0, pos), true);
+                    final DependencyVersion matchingVersion = DependencyVersionUtil.parseVersion(data.getFileVersion().substring(0, pos), true);
                     if (fileVersion.toString().length() == data.getFileVersion().length()) {
                         if (matchingVersion != null && matchingVersion.getVersionParts().size() > 2) {
-                            dependency.addEvidence(EvidenceType.VERSION, "AssemblyAnalyzer", "FilteredVersion", matchingVersion.toString(), Confidence.HIGHEST);
+                            dependency.addEvidence(EvidenceType.VERSION, "AssemblyAnalyzer", "FilteredVersion",
+                                    matchingVersion.toString(), Confidence.HIGHEST);
                             dependency.setVersion(matchingVersion.toString());
                         }
                     }
@@ -253,10 +252,10 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
                     }
                 }
             } else if (data.getFileVersion() != null) {
-                DependencyVersion version = DependencyVersionUtil.parseVersion(data.getFileVersion(), true);
+                final DependencyVersion version = DependencyVersionUtil.parseVersion(data.getFileVersion(), true);
                 dependency.setVersion(version.toString());
             } else if (data.getProductVersion() != null) {
-                DependencyVersion version = DependencyVersionUtil.parseVersion(data.getProductVersion(), true);
+                final DependencyVersion version = DependencyVersionUtil.parseVersion(data.getProductVersion(), true);
                 dependency.setVersion(version.toString());
             }
 
@@ -449,7 +448,6 @@ public class AssemblyAnalyzer extends AbstractFileTypeAnalyzer {
         args[1] = "--version";
         final ProcessBuilder pb = new ProcessBuilder(args);
         try {
-            final Map<String, String> envs = pb.environment();
             final Process proc = pb.start();
             final int retCode = proc.waitFor();
             if (retCode == 0) {
