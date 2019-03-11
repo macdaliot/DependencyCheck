@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>ReportGenerator.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Dependency-Check Maven Plugin</a> &gt; <a href="../index.html" class="el_bundle">dependency-check-core</a> &gt; <a href="index.source.html" class="el_package">org.owasp.dependencycheck.reporting</a> &gt; <span class="el_source">ReportGenerator.java</span></div><h1>ReportGenerator.java</h1><pre class="source lang-java linenums">/*
+ * This file is part of dependency-check-core.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (c) 2012 Jeremy Long. All Rights Reserved.
+ */
+package org.owasp.dependencycheck.reporting;
+
+import java.util.List;
+
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import javax.annotation.concurrent.NotThreadSafe;
+import org.apache.commons.text.WordUtils;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.context.Context;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.owasp.dependencycheck.analyzer.Analyzer;
+import org.owasp.dependencycheck.data.nvdcve.DatabaseProperties;
+import org.owasp.dependencycheck.dependency.Dependency;
+import org.owasp.dependencycheck.dependency.EvidenceType;
+import org.owasp.dependencycheck.exception.ReportException;
+import org.owasp.dependencycheck.utils.FileUtils;
+import org.owasp.dependencycheck.utils.Settings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * The ReportGenerator is used to, as the name implies, generate reports.
+ * Internally the generator uses the Velocity Templating Engine. The
+ * ReportGenerator exposes a list of Dependencies to the template when
+ * generating the report.
+ *
+ * @author Jeremy Long
+ */
+@NotThreadSafe
+public class ReportGenerator {
+
+    /**
+     * The logger.
+     */
+<span class="fc" id="L70">    private static final Logger LOGGER = LoggerFactory.getLogger(ReportGenerator.class);</span>
+
+    /**
+     * An enumeration of the report formats.
+     */
+<span class="fc" id="L75">    public enum Format {</span>
+
+        /**
+         * Generate all reports.
+         */
+<span class="fc" id="L80">        ALL,</span>
+        /**
+         * Generate XML report.
+         */
+<span class="fc" id="L84">        XML,</span>
+        /**
+         * Generate HTML report.
+         */
+<span class="fc" id="L88">        HTML,</span>
+        /**
+         * Generate JSON report.
+         */
+<span class="fc" id="L92">        JSON,</span>
+        /**
+         * Generate CSV report.
+         */
+<span class="fc" id="L96">        CSV</span>
+    }
+    /**
+     * The Velocity Engine.
+     */
+    private final VelocityEngine velocityEngine;
+    /**
+     * The Velocity Engine Context.
+     */
+    private final Context context;
+    /**
+     * The configured settings.
+     */
+    private final Settings settings;
+
+    /**
+     * Constructs a new ReportGenerator.
+     *
+     * @param applicationName the application name being analyzed
+     * @param dependencies the list of dependencies
+     * @param analyzers the list of analyzers used
+     * @param properties the database properties (containing timestamps of the
+     * NVD CVE data)
+     * @param settings a reference to the database settings
+     */
+    public ReportGenerator(String applicationName, List&lt;Dependency&gt; dependencies, List&lt;Analyzer&gt; analyzers,
+<span class="fc" id="L122">            DatabaseProperties properties, Settings settings) {</span>
+<span class="fc" id="L123">        this.settings = settings;</span>
+<span class="fc" id="L124">        velocityEngine = createVelocityEngine();</span>
+<span class="fc" id="L125">        velocityEngine.init();</span>
+<span class="fc" id="L126">        context = createContext(applicationName, dependencies, analyzers, properties);</span>
+<span class="fc" id="L127">    }</span>
+
+    /**
+     * Constructs a new ReportGenerator.
+     *
+     * @param applicationName the application name being analyzed
+     * @param groupID the group id of the project being analyzed
+     * @param artifactID the application id of the project being analyzed
+     * @param version the application version of the project being analyzed
+     * @param dependencies the list of dependencies
+     * @param analyzers the list of analyzers used
+     * @param properties the database properties (containing timestamps of the
+     * NVD CVE data)
+     * @param settings a reference to the database settings
+     */
+    //CSOFF: ParameterNumber
+    public ReportGenerator(String applicationName, String groupID, String artifactID, String version,
+            List&lt;Dependency&gt; dependencies, List&lt;Analyzer&gt; analyzers, DatabaseProperties properties, Settings settings) {
+<span class="fc" id="L145">        this(applicationName, dependencies, analyzers, properties, settings);</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        if (version != null) {</span>
+<span class="fc" id="L147">            context.put(&quot;applicationVersion&quot;, version);</span>
+        }
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        if (artifactID != null) {</span>
+<span class="fc" id="L150">            context.put(&quot;artifactID&quot;, artifactID);</span>
+        }
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (groupID != null) {</span>
+<span class="fc" id="L153">            context.put(&quot;groupID&quot;, groupID);</span>
+        }
+<span class="fc" id="L155">    }</span>
+    //CSON: ParameterNumber
+
+    /**
+     * Creates a new Velocity Engine.
+     *
+     * @return a velocity engine
+     */
+    private VelocityEngine createVelocityEngine() {
+<span class="fc" id="L164">        final VelocityEngine velocity = new VelocityEngine();</span>
+<span class="fc" id="L165">        return velocity;</span>
+    }
+
+    /**
+     * Constructs the velocity context used to generate the dependency-check
+     * reports.
+     *
+     * @param applicationName the application name being analyzed
+     * @param dependencies the list of dependencies
+     * @param analyzers the list of analyzers used
+     * @param properties the database properties (containing timestamps of the
+     * NVD CVE data)
+     * @return the velocity context
+     */
+    private VelocityContext createContext(String applicationName, List&lt;Dependency&gt; dependencies,
+            List&lt;Analyzer&gt; analyzers, DatabaseProperties properties) {
+<span class="fc" id="L181">        final DateTime dt = new DateTime();</span>
+<span class="fc" id="L182">        final DateTimeFormatter dateFormat = DateTimeFormat.forPattern(&quot;MMM d, yyyy 'at' HH:mm:ss z&quot;);</span>
+<span class="fc" id="L183">        final DateTimeFormatter dateFormatXML = DateTimeFormat.forPattern(&quot;yyyy-MM-dd'T'HH:mm:ss.SSSZ&quot;);</span>
+
+<span class="fc" id="L185">        final String scanDate = dateFormat.print(dt);</span>
+<span class="fc" id="L186">        final String scanDateXML = dateFormatXML.print(dt);</span>
+
+<span class="fc" id="L188">        final VelocityContext ctxt = new VelocityContext();</span>
+<span class="fc" id="L189">        ctxt.put(&quot;applicationName&quot;, applicationName);</span>
+<span class="fc" id="L190">        ctxt.put(&quot;dependencies&quot;, dependencies);</span>
+<span class="fc" id="L191">        ctxt.put(&quot;analyzers&quot;, analyzers);</span>
+<span class="fc" id="L192">        ctxt.put(&quot;properties&quot;, properties);</span>
+<span class="fc" id="L193">        ctxt.put(&quot;scanDate&quot;, scanDate);</span>
+<span class="fc" id="L194">        ctxt.put(&quot;scanDateXML&quot;, scanDateXML);</span>
+<span class="fc" id="L195">        ctxt.put(&quot;enc&quot;, new EscapeTool());</span>
+<span class="fc" id="L196">        ctxt.put(&quot;rpt&quot;, new ReportTool());</span>
+<span class="fc" id="L197">        ctxt.put(&quot;WordUtils&quot;, new WordUtils());</span>
+<span class="fc" id="L198">        ctxt.put(&quot;VENDOR&quot;, EvidenceType.VENDOR);</span>
+<span class="fc" id="L199">        ctxt.put(&quot;PRODUCT&quot;, EvidenceType.PRODUCT);</span>
+<span class="fc" id="L200">        ctxt.put(&quot;VERSION&quot;, EvidenceType.VERSION);</span>
+<span class="fc" id="L201">        ctxt.put(&quot;version&quot;, settings.getString(Settings.KEYS.APPLICATION_VERSION, &quot;Unknown&quot;));</span>
+<span class="fc" id="L202">        return ctxt;</span>
+    }
+
+    /**
+     * Writes the dependency-check report to the given output location.
+     *
+     * @param outputLocation the path where the reports should be written
+     * @param format the format the report should be written in (XML, HTML,
+     * JSON, CSV, ALL) or even the path to a custom velocity template (either
+     * fully qualified or the template name on the class path).
+     * @throws ReportException is thrown if there is an error creating out the
+     * reports
+     */
+    public void write(String outputLocation, String format) throws ReportException {
+<span class="fc" id="L216">        Format reportFormat = null;</span>
+        try {
+<span class="fc" id="L218">            reportFormat = Format.valueOf(format.toUpperCase());</span>
+<span class="nc" id="L219">        } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L220">            LOGGER.trace(&quot;ignore this exception&quot;, ex);</span>
+<span class="fc" id="L221">        }</span>
+
+<span class="pc bpc" id="L223" title="1 of 2 branches missed.">        if (reportFormat != null) {</span>
+<span class="fc" id="L224">            write(outputLocation, reportFormat);</span>
+        } else {
+<span class="nc" id="L226">            final File out = getReportFile(outputLocation, null);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">            if (out.isDirectory()) {</span>
+<span class="nc" id="L228">                throw new ReportException(&quot;Unable to write non-standard VSL output to a directory, please specify a file name&quot;);</span>
+            }
+<span class="nc" id="L230">            processTemplate(format, out);</span>
+        }
+
+<span class="fc" id="L233">    }</span>
+
+    /**
+     * Writes the dependency-check report(s).
+     *
+     * @param outputLocation the path where the reports should be written
+     * @param format the format the report should be written in (XML, HTML, ALL)
+     * @throws ReportException is thrown if there is an error creating out the
+     * reports
+     */
+    public void write(String outputLocation, Format format) throws ReportException {
+<span class="fc bfc" id="L244" title="All 2 branches covered.">        if (format == Format.ALL) {</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">            for (Format f : Format.values()) {</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">                if (f != Format.ALL) {</span>
+<span class="fc" id="L247">                    write(outputLocation, f);</span>
+                }
+            }
+        } else {
+<span class="fc" id="L251">            final File out = getReportFile(outputLocation, format);</span>
+<span class="fc" id="L252">            final String templateName = format.toString().toLowerCase() + &quot;Report&quot;;</span>
+<span class="fc" id="L253">            processTemplate(templateName, out);</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">            if (format == Format.JSON) {</span>
+<span class="fc" id="L255">                pretifyJson(out.getPath());</span>
+            }
+        }
+<span class="fc" id="L258">    }</span>
+
+    /**
+     * Determines the report file name based on the give output location and
+     * format. If the output location contains a full file name that has the
+     * correct extension for the given report type then the output location is
+     * returned. However, if the output location is a directory, this method
+     * will generate the correct name for the given output format.
+     *
+     * @param outputLocation the specified output location
+     * @param format the report format
+     * @return the report File
+     */
+    protected File getReportFile(String outputLocation, Format format) {
+<span class="fc" id="L272">        File outFile = new File(outputLocation);</span>
+<span class="pc bpc" id="L273" title="1 of 2 branches missed.">        if (outFile.getParentFile() == null) {</span>
+<span class="nc" id="L274">            outFile = new File(&quot;.&quot;, outputLocation);</span>
+        }
+<span class="fc" id="L276">        final String pathToCheck = outputLocation.toLowerCase();</span>
+<span class="fc bfc" id="L277" title="All 4 branches covered.">        if (format == Format.XML &amp;&amp; !pathToCheck.endsWith(&quot;.xml&quot;)) {</span>
+<span class="fc" id="L278">            return new File(outFile, &quot;dependency-check-report.xml&quot;);</span>
+        }
+<span class="pc bpc" id="L280" title="2 of 6 branches missed.">        if (format == Format.HTML &amp;&amp; !pathToCheck.endsWith(&quot;.html&quot;) &amp;&amp; !pathToCheck.endsWith(&quot;.htm&quot;)) {</span>
+<span class="fc" id="L281">            return new File(outFile, &quot;dependency-check-report.html&quot;);</span>
+        }
+<span class="pc bpc" id="L283" title="1 of 4 branches missed.">        if (format == Format.JSON &amp;&amp; !pathToCheck.endsWith(&quot;.json&quot;)) {</span>
+<span class="fc" id="L284">            return new File(outFile, &quot;dependency-check-report.json&quot;);</span>
+        }
+<span class="pc bpc" id="L286" title="1 of 4 branches missed.">        if (format == Format.CSV &amp;&amp; !pathToCheck.endsWith(&quot;.csv&quot;)) {</span>
+<span class="fc" id="L287">            return new File(outFile, &quot;dependency-check-report.csv&quot;);</span>
+        }
+<span class="fc" id="L289">        return outFile;</span>
+    }
+
+    /**
+     * Generates a report from a given Velocity Template. The template name
+     * provided can be the name of a template contained in the jar file, such as
+     * 'XmlReport' or 'HtmlReport', or the template name can be the path to a
+     * template file.
+     *
+     * @param template the name of the template to load
+     * @param file the output file to write the report to
+     * @throws ReportException is thrown when the report cannot be generated
+     */
+    @SuppressFBWarnings(justification = &quot;try with resources will clean up the output stream&quot;, value = {&quot;OBL_UNSATISFIED_OBLIGATION&quot;})
+    protected void processTemplate(String template, File file) throws ReportException {
+<span class="fc" id="L304">        ensureParentDirectoryExists(file);</span>
+<span class="fc" id="L305">        try (OutputStream output = new FileOutputStream(file)) {</span>
+<span class="fc" id="L306">            processTemplate(template, output);</span>
+<span class="nc" id="L307">        } catch (IOException ex) {</span>
+<span class="nc" id="L308">            throw new ReportException(String.format(&quot;Unable to write to file: %s&quot;, file), ex);</span>
+<span class="fc" id="L309">        }</span>
+<span class="fc" id="L310">    }</span>
+
+    /**
+     * Generates a report from a given Velocity Template. The template name
+     * provided can be the name of a template contained in the jar file, such as
+     * 'XmlReport' or 'HtmlReport', or the template name can be the path to a
+     * template file.
+     *
+     * @param templateName the name of the template to load
+     * @param outputStream the OutputStream to write the report to
+     * @throws ReportException is thrown when an exception occurs
+     */
+    protected void processTemplate(String templateName, OutputStream outputStream) throws ReportException {
+<span class="fc" id="L323">        InputStream input = null;</span>
+<span class="fc" id="L324">        String logTag = null;</span>
+<span class="fc" id="L325">        final File f = new File(templateName);</span>
+        try {
+<span class="pc bpc" id="L327" title="1 of 2 branches missed.">            if (f.isFile()) {</span>
+                try {
+<span class="nc" id="L329">                    logTag = templateName;</span>
+<span class="nc" id="L330">                    input = new FileInputStream(f);</span>
+<span class="nc" id="L331">                } catch (FileNotFoundException ex) {</span>
+<span class="nc" id="L332">                    throw new ReportException(&quot;Unable to locate template file: &quot; + templateName, ex);</span>
+<span class="nc" id="L333">                }</span>
+            } else {
+<span class="fc" id="L335">                logTag = &quot;templates/&quot; + templateName + &quot;.vsl&quot;;</span>
+<span class="fc" id="L336">                input = FileUtils.getResourceAsStream(logTag);</span>
+            }
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">            if (input == null) {</span>
+<span class="nc" id="L339">                logTag = templateName;</span>
+<span class="nc" id="L340">                input = FileUtils.getResourceAsStream(templateName);</span>
+            }
+<span class="pc bpc" id="L342" title="1 of 2 branches missed.">            if (input == null) {</span>
+<span class="nc" id="L343">                throw new ReportException(&quot;Template file doesn't exist: &quot; + logTag);</span>
+            }
+
+<span class="fc" id="L346">            try (InputStreamReader reader = new InputStreamReader(input, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L347">                    OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {</span>
+<span class="pc bpc" id="L348" title="1 of 2 branches missed.">                if (!velocityEngine.evaluate(context, writer, logTag, reader)) {</span>
+<span class="nc" id="L349">                    throw new ReportException(&quot;Failed to convert the template into html.&quot;);</span>
+                }
+<span class="fc" id="L351">                writer.flush();</span>
+<span class="nc" id="L352">            } catch (UnsupportedEncodingException ex) {</span>
+<span class="nc" id="L353">                throw new ReportException(&quot;Unable to generate the report using UTF-8&quot;, ex);</span>
+<span class="nc" id="L354">            } catch (IOException ex) {</span>
+<span class="nc" id="L355">                throw new ReportException(&quot;Unable to write the report&quot;, ex);</span>
+<span class="fc" id="L356">            }</span>
+        } finally {
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">            if (input != null) {</span>
+                try {
+<span class="fc" id="L360">                    input.close();</span>
+<span class="nc" id="L361">                } catch (IOException ex) {</span>
+<span class="nc" id="L362">                    LOGGER.trace(&quot;Error closing input&quot;, ex);</span>
+<span class="fc" id="L363">                }</span>
+            }
+        }
+<span class="fc" id="L366">    }</span>
+
+    /**
+     * Validates that the given file's parent directory exists. If the directory
+     * does not exist an attempt to create the necessary path is made; if that
+     * fails a ReportException will be raised.
+     *
+     * @param file the file or directory directory
+     * @throws ReportException thrown if the parent directory does not exist and
+     * cannot be created
+     */
+    private void ensureParentDirectoryExists(File file) throws ReportException {
+<span class="pc bpc" id="L378" title="1 of 2 branches missed.">        if (!file.getParentFile().exists()) {</span>
+<span class="nc" id="L379">            final boolean created = file.getParentFile().mkdirs();</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">            if (!created) {</span>
+<span class="nc" id="L381">                final String msg = String.format(&quot;Unable to create directory '%s'.&quot;, file.getParentFile().getAbsolutePath());</span>
+<span class="nc" id="L382">                throw new ReportException(msg);</span>
+            }
+        }
+<span class="fc" id="L385">    }</span>
+
+    /**
+     * Reformats the given JSON file.
+     *
+     * @param pathToJson the path to the JSON file to be reformatted
+     * @throws ReportException thrown if the given JSON file is malformed
+     */
+    private void pretifyJson(String pathToJson) throws ReportException {
+<span class="fc" id="L394">        final String outputPath = pathToJson + &quot;.pretty&quot;;</span>
+<span class="fc" id="L395">        final File in = new File(pathToJson);</span>
+<span class="fc" id="L396">        final File out = new File(outputPath);</span>
+<span class="fc" id="L397">        try (JsonReader reader = new JsonReader(new InputStreamReader(new FileInputStream(in), StandardCharsets.UTF_8));</span>
+<span class="fc" id="L398">                JsonWriter writer = new JsonWriter(new OutputStreamWriter(new FileOutputStream(out), StandardCharsets.UTF_8))) {</span>
+<span class="fc" id="L399">            prettyPrint(reader, writer);</span>
+<span class="nc" id="L400">        } catch (IOException ex) {</span>
+<span class="nc" id="L401">            LOGGER.debug(&quot;Malformed JSON?&quot;, ex);</span>
+<span class="nc" id="L402">            throw new ReportException(&quot;Unable to generate json report&quot;, ex);</span>
+<span class="fc" id="L403">        }</span>
+<span class="pc bpc" id="L404" title="3 of 6 branches missed.">        if (out.isFile() &amp;&amp; in.isFile() &amp;&amp; in.delete()) {</span>
+            try {
+<span class="fc" id="L406">                org.apache.commons.io.FileUtils.moveFile(out, in);</span>
+<span class="nc" id="L407">            } catch (IOException ex) {</span>
+<span class="nc" id="L408">                LOGGER.error(&quot;Unable to generate pretty report, caused by: {}&quot;, ex.getMessage());</span>
+<span class="fc" id="L409">            }</span>
+        }
+<span class="fc" id="L411">    }</span>
+
+    /**
+     * Streams from a json reader to a json writer and performs pretty printing.
+     *
+     * This function is copied from https://sites.google.com/site/gson/streaming
+     *
+     * @param reader json reader
+     * @param writer json writer
+     * @throws IOException thrown if the json is malformed
+     */
+    private static void prettyPrint(JsonReader reader, JsonWriter writer) throws IOException {
+<span class="fc" id="L423">        writer.setIndent(&quot;  &quot;);</span>
+        while (true) {
+<span class="fc" id="L425">            final JsonToken token = reader.peek();</span>
+<span class="pc bpc" id="L426" title="2 of 11 branches missed.">            switch (token) {</span>
+                case BEGIN_ARRAY:
+<span class="fc" id="L428">                    reader.beginArray();</span>
+<span class="fc" id="L429">                    writer.beginArray();</span>
+<span class="fc" id="L430">                    break;</span>
+                case END_ARRAY:
+<span class="fc" id="L432">                    reader.endArray();</span>
+<span class="fc" id="L433">                    writer.endArray();</span>
+<span class="fc" id="L434">                    break;</span>
+                case BEGIN_OBJECT:
+<span class="fc" id="L436">                    reader.beginObject();</span>
+<span class="fc" id="L437">                    writer.beginObject();</span>
+<span class="fc" id="L438">                    break;</span>
+                case END_OBJECT:
+<span class="fc" id="L440">                    reader.endObject();</span>
+<span class="fc" id="L441">                    writer.endObject();</span>
+<span class="fc" id="L442">                    break;</span>
+                case NAME:
+<span class="fc" id="L444">                    final String name = reader.nextName();</span>
+<span class="fc" id="L445">                    writer.name(name);</span>
+<span class="fc" id="L446">                    break;</span>
+                case STRING:
+<span class="fc" id="L448">                    final String s = reader.nextString();</span>
+<span class="fc" id="L449">                    writer.value(s);</span>
+<span class="fc" id="L450">                    break;</span>
+                case NUMBER:
+<span class="fc" id="L452">                    final String n = reader.nextString();</span>
+<span class="fc" id="L453">                    writer.value(new BigDecimal(n));</span>
+<span class="fc" id="L454">                    break;</span>
+                case BOOLEAN:
+<span class="fc" id="L456">                    final boolean b = reader.nextBoolean();</span>
+<span class="fc" id="L457">                    writer.value(b);</span>
+<span class="fc" id="L458">                    break;</span>
+                case NULL:
+<span class="nc" id="L460">                    reader.nextNull();</span>
+<span class="nc" id="L461">                    writer.nullValue();</span>
+<span class="nc" id="L462">                    break;</span>
+                case END_DOCUMENT:
+<span class="fc" id="L464">                    return;</span>
+                default:
+<span class="nc" id="L466">                    LOGGER.debug(&quot;Unexpected JSON toekn {}&quot;, token.toString());</span>
+                    break;
+            }
+<span class="fc" id="L469">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

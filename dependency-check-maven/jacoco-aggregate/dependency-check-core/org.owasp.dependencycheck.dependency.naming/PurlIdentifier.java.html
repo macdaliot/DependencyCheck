@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>PurlIdentifier.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Dependency-Check Maven Plugin</a> &gt; <a href="../index.html" class="el_bundle">dependency-check-core</a> &gt; <a href="index.source.html" class="el_package">org.owasp.dependencycheck.dependency.naming</a> &gt; <span class="el_source">PurlIdentifier.java</span></div><h1>PurlIdentifier.java</h1><pre class="source lang-java linenums">/*
+ * This file is part of dependency-check-core.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (c) 2019 Jeremy Long. All Rights Reserved.
+ */
+package org.owasp.dependencycheck.dependency.naming;
+
+import com.github.packageurl.MalformedPackageURLException;
+import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.owasp.dependencycheck.dependency.Confidence;
+import com.github.packageurl.PackageURL;
+import com.github.packageurl.PackageURLBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+/**
+ * The Package-URL Identifier implementation.
+ *
+ * @author Jeremy Long
+ */
+public class PurlIdentifier implements Identifier {
+
+    /**
+     * The serial version UID for serialization.
+     */
+    private static final long serialVersionUID = 8371122848306175579L;
+
+    /**
+     * The PackageURL identifier.
+     */
+    private final PackageURL purl;
+    /**
+     * The confidence that this is the correct identifier.
+     */
+    private Confidence confidence;
+    /**
+     * The URL for the identifier.
+     */
+    private String url;
+    /**
+     * Notes about the vulnerability. Generally used for suppression
+     * information.
+     */
+    private String notes;
+
+    /**
+     * Constructs a new Package-URL identifier.
+     *
+     * @param purl the Package-URL object
+     * @param confidence the confidence that the identifier is correct for the
+     * given dependency
+     */
+<span class="fc" id="L65">    public PurlIdentifier(PackageURL purl, Confidence confidence) {</span>
+<span class="fc" id="L66">        this.purl = purl;</span>
+<span class="fc" id="L67">        this.confidence = confidence;</span>
+<span class="fc" id="L68">        this.url = null;</span>
+<span class="fc" id="L69">    }</span>
+
+    /**
+     * Constructs a new Package-URL identifier.
+     *
+     * @param purl the Package-URL object
+     * @param url the URL for the identifier
+     * @param confidence the confidence that the identifier is correct for the
+     * given dependency
+     */
+<span class="nc" id="L79">    public PurlIdentifier(PackageURL purl, String url, Confidence confidence) {</span>
+<span class="nc" id="L80">        this.purl = purl;</span>
+<span class="nc" id="L81">        this.confidence = confidence;</span>
+<span class="nc" id="L82">        this.url = url;</span>
+<span class="nc" id="L83">    }</span>
+
+    /**
+     * Constructs a new Package-URL identifier.
+     *
+     * @param type the type of package-URL
+     * @param name the name
+     * @param version the version
+     * @param confidence the confidence that the identifier is correct for the
+     * given dependency
+     * @throws MalformedPackageURLException thrown if the type, name space,
+     * name, and version cannot be converted into a package-URL
+     */
+<span class="nc" id="L96">    public PurlIdentifier(String type, String name, String version, Confidence confidence) throws MalformedPackageURLException {</span>
+<span class="nc" id="L97">        this.purl = PackageURLBuilder.aPackageURL().withType(type).withName(name)</span>
+<span class="nc" id="L98">                .withVersion(version).build();</span>
+<span class="nc" id="L99">        this.confidence = confidence;</span>
+<span class="nc" id="L100">    }</span>
+
+    /**
+     * Constructs a new Package-URL identifier.
+     *
+     * @param type the type of package-URL
+     * @param namespace the name space
+     * @param name the name
+     * @param version the version
+     * @param confidence the confidence that the identifier is correct for the
+     * given dependency
+     * @throws MalformedPackageURLException thrown if the type, name space,
+     * name, and version cannot be converted into a package-URL
+     */
+<span class="nc" id="L114">    public PurlIdentifier(String type, String namespace, String name, String version, Confidence confidence) throws MalformedPackageURLException {</span>
+<span class="nc" id="L115">        this.purl = PackageURLBuilder.aPackageURL().withType(type).withNamespace(namespace).withName(name)</span>
+<span class="nc" id="L116">                .withVersion(version).build();</span>
+<span class="nc" id="L117">        this.confidence = confidence;</span>
+<span class="nc" id="L118">    }</span>
+
+    @Override
+    public Confidence getConfidence() {
+<span class="fc" id="L122">        return confidence;</span>
+    }
+
+    @Override
+    public String getNotes() {
+<span class="fc" id="L127">        return notes;</span>
+    }
+
+    @Override
+    public String getUrl() {
+<span class="fc" id="L132">        return url;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setConfidence(Confidence confidence) {
+<span class="fc" id="L140">        this.confidence = confidence;</span>
+<span class="fc" id="L141">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUrl(String url) {
+<span class="fc" id="L148">        this.url = url;</span>
+<span class="fc" id="L149">    }</span>
+
+    @Override
+    public void setNotes(String notes) {
+<span class="nc" id="L153">        this.notes = notes;</span>
+<span class="nc" id="L154">    }</span>
+
+    /**
+     * Returns the CPE 2.3 formatted string.
+     *
+     * @return the CPE 2.3 formatted string
+     */
+    @Override
+    public String toString() {
+<span class="nc" id="L163">        return purl.canonicalize();</span>
+    }
+
+    @Override
+    public String getValue() {
+<span class="fc" id="L168">        return purl.canonicalize();</span>
+    }
+
+    /**
+     * Returns the Package URL name space.
+     *
+     * @return the Package URL name space
+     */
+    public String getNamespace() {
+<span class="fc" id="L177">        return purl.getNamespace();</span>
+    }
+
+    /**
+     * Returns the Package URL name.
+     *
+     * @see com.github.packageurl.PackageURL#getName()
+     * @return the Package URL name.
+     */
+    public String getName() {
+<span class="fc" id="L187">        return purl.getName();</span>
+    }
+
+    /**
+     * Returns the Package URL version.
+     *
+     * @see com.github.packageurl.PackageURL#getVersion()
+     * @return the Package URL name.
+     */
+    public String getVersion() {
+<span class="nc" id="L197">        return purl.getVersion();</span>
+    }
+
+    /**
+     * Returns the GAV representation of the Package URL as utilized in gradle
+     * builds.
+     *
+     * @return the GAV representation of the Package URL
+     */
+    public String toGav() {
+<span class="pc bpc" id="L207" title="1 of 4 branches missed.">        if (purl.getNamespace() != null &amp;&amp; purl.getVersion() != null) {</span>
+<span class="fc" id="L208">            return String.format(&quot;%s:%s:%s&quot;, purl.getNamespace(), purl.getName(), purl.getVersion());</span>
+        }
+<span class="fc" id="L210">        return null;</span>
+    }
+
+    @Override
+    public int compareTo(Identifier o) {
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">        if (o instanceof PurlIdentifier) {</span>
+<span class="fc" id="L216">            final PurlIdentifier other = (PurlIdentifier) o;</span>
+<span class="fc" id="L217">            return new CompareToBuilder()</span>
+                    //todo update package url implementation to implement compare..
+<span class="fc" id="L219">                    .append(this.purl.canonicalize(), other.purl.canonicalize())</span>
+<span class="fc" id="L220">                    .append(this.url, other.getUrl())</span>
+<span class="fc" id="L221">                    .append(this.confidence, other.getConfidence())</span>
+<span class="fc" id="L222">                    .toComparison();</span>
+
+        }
+<span class="nc" id="L225">        return new CompareToBuilder()</span>
+<span class="nc" id="L226">                .append(this.toString(), o.toString())</span>
+<span class="nc" id="L227">                .append(this.url, o.getUrl())</span>
+<span class="nc" id="L228">                .append(this.confidence, o.getConfidence())</span>
+<span class="nc" id="L229">                .toComparison();</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L234">        return new HashCodeBuilder()</span>
+<span class="fc" id="L235">                .append(this.purl)</span>
+<span class="fc" id="L236">                .append(this.confidence)</span>
+<span class="fc" id="L237">                .append(this.url)</span>
+<span class="fc" id="L238">                .append(this.notes)</span>
+<span class="fc" id="L239">                .toHashCode();</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L244" title="All 2 branches missed.">        if (obj == null) {</span>
+<span class="nc" id="L245">            return false;</span>
+        }
+<span class="nc bnc" id="L247" title="All 2 branches missed.">        if (obj == this) {</span>
+<span class="nc" id="L248">            return true;</span>
+        }
+<span class="nc bnc" id="L250" title="All 2 branches missed.">        if (!(obj instanceof PurlIdentifier)) {</span>
+<span class="nc" id="L251">            return false;</span>
+        }
+<span class="nc" id="L253">        final PurlIdentifier other = (PurlIdentifier) obj;</span>
+<span class="nc" id="L254">        return new EqualsBuilder().append(purl, other.purl)</span>
+<span class="nc" id="L255">                .append(this.confidence, other.confidence)</span>
+<span class="nc" id="L256">                .append(this.url, other.url)</span>
+<span class="nc" id="L257">                .append(this.notes, other.notes).isEquals();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
